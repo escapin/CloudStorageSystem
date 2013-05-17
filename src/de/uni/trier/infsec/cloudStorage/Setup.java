@@ -5,6 +5,7 @@ import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 
 public class Setup {
 
@@ -30,13 +31,14 @@ public class Setup {
 		// Create and register the client
 		// (we consider one honest client; the remaining clients will be subsumed 
 		// by the adversary)
+		SymEnc client_symenc = new SymEnc();
 		PKIEnc.Decryptor client_decryptor = new PKIEnc.Decryptor(HONEST_CLIENT_ID);
 		PKISig.Signer client_signer = new PKISig.Signer(HONEST_CLIENT_ID);
 		Client client = null;
 		try {
 			PKIEnc.register(client_decryptor.getEncryptor(), Params.PKI_ENC_DOMAIN);
 			PKISig.register(client_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
-			client = new Client(client_decryptor, client_signer);
+			client = new Client(client_symenc, client_decryptor, client_signer);
 		} 
 		catch (PKIError | NetworkError e) { // registration failed or it was impossible to obtein the server public keys
 			return;
