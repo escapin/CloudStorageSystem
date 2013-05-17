@@ -32,15 +32,15 @@ public class Setup {
 		// by the adversary)
 		PKIEnc.Decryptor client_decryptor = new PKIEnc.Decryptor(HONEST_CLIENT_ID);
 		PKISig.Signer client_signer = new PKISig.Signer(HONEST_CLIENT_ID);
+		Client client = null;
 		try {
 			PKIEnc.register(client_decryptor.getEncryptor(), Params.PKI_ENC_DOMAIN);
 			PKISig.register(client_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
+			client = new Client(client_decryptor, client_signer);
 		} 
-		catch (PKIError | NetworkError e) { // registration failed
+		catch (PKIError | NetworkError e) { // registration failed or it was impossible to obtein the server public keys
 			return;
 		}
-
-		Client client = new Client(client_decryptor, client_signer);
 
 		while( Environment.untrustedInput() != 0 ) {
 			// the adversary decides what to do:
@@ -57,8 +57,7 @@ public class Setup {
 
 			case 1: // client.retrieve
 				label = Environment.untrustedInputMessage();
-				byte[] retrieved_message =  client.retreive(label);
-				// the retrieved message is ignored
+				client.retreive(label);	// the result (the retrieved message) is ignored
 				break;
 
 			case 2: // server.processRequest
