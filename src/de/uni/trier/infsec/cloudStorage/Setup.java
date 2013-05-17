@@ -9,14 +9,12 @@ import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
 public class Setup {
 
 	public static final int HONEST_CLIENT_ID = 100;
-	
+
 	public static void main(String args[]) {
 		setup(true);
 	}
-	
-	
+
 	public static void setup(boolean secret_bit) {
-		
 		// Create and register the server
 		PKIEnc.Decryptor server_decryptor = new PKIEnc.Decryptor(Params.SERVER_ID);
 		PKISig.Signer server_signer = new PKISig.Signer(Params.SERVER_ID);
@@ -29,7 +27,6 @@ public class Setup {
 		}
 		Server server = new Server(server_decryptor, server_signer);
 
-		
 		// Create and register the client
 		// (we consider one honest client; the remaining clients will be subsumed 
 		// by the adversary)
@@ -42,12 +39,54 @@ public class Setup {
 		catch (PKIError | NetworkError e) { // registration failed
 			return;
 		}
-		
+
 		Client client = new Client(client_decryptor, client_signer);
-		
+
 		while( Environment.untrustedInput() != 0 ) {
 			// the adversary decides what to do:
-			// TODO: fill this up
+			int action = Environment.untrustedInput();
+
+			switch (action) {
+			case 0: // client.store
+				byte[] label = Environment.untrustedInputMessage();
+				byte[] msg1 = Environment.untrustedInputMessage();
+				byte[] msg2 = Environment.untrustedInputMessage();
+				byte[] msg = (secret_bit ? msg1 : msg2);
+				client.store(msg, label);
+				break;
+
+			case 1: // client.retrieve
+				label = Environment.untrustedInputMessage();
+				byte[] retrieved_message =  client.retreive(label);
+				// the retrieved message is ignored
+				break;
+
+			case 2: // server.processRequest
+				byte[] message = Environment.untrustedInputMessage();
+				byte[] responce = server.processRequest(message);
+				Environment.untrustedOutputMessage(responce);
+				break;
+
+			case 3: // registering a corrupted encryptor
+				byte[] pub_key = Environment.untrustedInputMessage();
+				int enc_id = Environment.untrustedInput();
+				PKIEnc.Encryptor corrupted_encryptor = new PKIEnc.Encryptor(enc_id, pub_key);
+				try {
+					PKIEnc.register(corrupted_encryptor, Params.PKI_ENC_DOMAIN);
+				}
+				catch (Exception e) {}
+				break;
+
+			case 4: // registering a corrupted verifier
+				byte[] verif_key = Environment.untrustedInputMessage();
+				int verif_id = Environment.untrustedInput();
+				PKISig.Verifier corrupted_verifier = new PKISig.Verifier(verif_id, verif_key);
+				try {
+					PKISig.register(corrupted_verifier, Params.PKI_DSIG_DOMAIN);
+				}
+				catch (Exception e) {}
+				break;
+			}
 		}
 	}	
 }
