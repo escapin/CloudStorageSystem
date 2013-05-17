@@ -1,6 +1,17 @@
 package de.uni.trier.infsec.cloudStorage;
 
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
+
 public class Client {
+
+	private PKIEnc encryptor;
+	private PKISig signer;
+	
+	public Client(PKIEnc encryptor, PKISig signer) {
+		this.encryptor = encryptor;
+		this.signer = signer;
+	}
 	
 	/**
 	 * Store a message into a server under a label
