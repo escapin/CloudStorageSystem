@@ -1,6 +1,26 @@
 package de.uni.trier.infsec.cloudStorage;
 
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
+import de.uni.trier.infsec.environment.network.NetworkError;
+
 public class Client {
+
+	private SymEnc symenc;
+	private PKIEnc.Decryptor decryptor;
+	private PKISig.Signer signer;
+	private PKIEnc.Encryptor server_enc;
+	private PKISig.Verifier server_ver;
+	
+	public Client(SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
+		this.symenc = symenc;
+		this.decryptor = decryptor;
+		this.signer = signer;
+		this.server_enc = PKIEnc.getEncryptor(Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
+		this.server_ver = PKISig.getVerifier(Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
+	}
 	
 	/**
 	 * Store a message into a server under a label

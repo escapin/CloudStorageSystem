@@ -1,6 +1,18 @@
 package de.uni.trier.infsec.cloudStorage;
 
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
+
 public class Server {
+	
+	private PKIEnc.Decryptor decryptor;
+	private PKISig.Signer signer;
+	
+	public Server(PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
+		this.decryptor = decryptor;
+		this.signer = signer;
+	}
+	
 	
 	/**
 	 * Process every request coming from a client and reply with a message 

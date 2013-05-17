@@ -14,9 +14,15 @@ public class Storage {
 	public void add(byte[] label, int index, byte[] msg){
 		storage.put(new KeyStorage(label, index), msg);
 	}
+
 	public byte[] get(byte[] label, int index){
+<<<<<<< HEAD
 		return storage.get(new KeyStorage(label, index));
+=======
+		return null;
+>>>>>>> 336f80abcebd5a649775c84028d495ce15d284c6
 	}
+
 	public void remove(byte[] label, int index){
 		storage.remove(new KeyStorage(label, index));
 	}
