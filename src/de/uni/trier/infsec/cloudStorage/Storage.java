@@ -10,9 +10,11 @@ public class Storage {
 	public void add(byte[] label, int index, byte[] msg){
 		
 	}
+
 	public byte[] get(byte[] label, int index){
-		
+		return null;
 	}
+
 	public void remove(byte[] label, int index){
 		
 	}
