@@ -5,11 +5,11 @@ import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
 
 public class Client {
 
-	private PKIEnc encryptor;
-	private PKISig signer;
+	private PKIEnc.Decryptor decryptor;
+	private PKISig.Signer signer;
 	
-	public Client(PKIEnc encryptor, PKISig signer) {
-		this.encryptor = encryptor;
+	public Client(PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
+		this.decryptor = decryptor;
 		this.signer = signer;
 	}
 	

@@ -5,11 +5,11 @@ import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
 
 public class Server {
 	
-	private PKIEnc encryptor;
-	private PKISig signer;
+	private PKIEnc.Decryptor decryptor;
+	private PKISig.Signer signer;
 	
-	public Server(PKIEnc encryptor, PKISig signer) {
-		this.encryptor = encryptor;
+	public Server(PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
+		this.decryptor = decryptor;
 		this.signer = signer;
 	}
 	
