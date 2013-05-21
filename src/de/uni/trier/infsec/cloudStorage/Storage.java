@@ -9,43 +9,40 @@ import java.util.*;
  *
  */
 public class Storage {
-	Map<KeyStorage,byte[]> storage = new HashMap<KeyStorage,byte[]>();
+	private Map<KeyStorage,byte[]> storage = new HashMap<KeyStorage,byte[]>();
 	
-	public void add(byte[] label, int index, byte[] msg){
-		storage.put(new KeyStorage(label, index), msg);
+	public void add(byte[] label, int count, byte[] msg){
+		storage.put(new KeyStorage(label, count), msg);
 	}
 
-	public byte[] get(byte[] label, int index){
-<<<<<<< HEAD
-		return storage.get(new KeyStorage(label, index));
-=======
-		return null;
->>>>>>> 336f80abcebd5a649775c84028d495ce15d284c6
+	public byte[] get(byte[] label, int count){
+		return storage.get(new KeyStorage(label, count));
 	}
 
-	public void remove(byte[] label, int index){
-		storage.remove(new KeyStorage(label, index));
+	public void remove(byte[] label, int count){
+		storage.remove(new KeyStorage(label, count));
 	}
+
 	
 	private class KeyStorage{
 		private byte[] label;
-		private int index;
+		private int count;
 		
-		public KeyStorage(byte[] label, int index){
+		public KeyStorage(byte[] label, int count){
 			this.label=label;
-			this.index=index;
+			this.count=count;
 		}
 		public byte[] getLabel(){
 			return label;
 		}
-		public int getIndex(){
-			return index;
+		public int getCount(){
+			return count;
 		}
 		
 		public boolean equals(Object obj){
 			if(obj instanceof KeyStorage){
 				KeyStorage k = (KeyStorage) obj;
-				return this.getLabel().equals(k.getLabel()) && this.getIndex()==k.getIndex();
+				return Arrays.equals(this.getLabel(), k.getLabel()) && this.getCount()==k.getCount();
 			}
 			return false;
 		}

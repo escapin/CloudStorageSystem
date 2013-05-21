@@ -1,18 +1,6 @@
 package de.uni.trier.infsec.cloudStorage;
 
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
-
-public class Server {
-	
-	private PKIEnc.Decryptor decryptor;
-	private PKISig.Signer signer;
-	
-	public Server(PKIEnc.Decryptor decryptor, PKISig.Signer signer) {
-		this.decryptor = decryptor;
-		this.signer = signer;
-	}
-	
+public class Server{
 	
 	/**
 	 * Process every request coming from a client and reply with a message 
@@ -20,14 +8,14 @@ public class Server {
 	 * @param msg
 	 * @return
 	 */
-	public byte[] processRequest(byte[] msg){
+	public static byte[] processRequest(byte[] msg){
 		return null;
 	}
 	
-	private void store(byte[] msg, byte[] label, int index, byte[] clienID, byte[] clientSignature){
-		
+	private static void store(byte[] msg, byte[] label, int index, byte[] clientID, byte[] clientSignature){
+	
 	}
-	private byte[] getMessage(byte[] label, int index){
+	private static byte[] getMsg(byte[] label, int index){
 		return null;
 	}
 }
