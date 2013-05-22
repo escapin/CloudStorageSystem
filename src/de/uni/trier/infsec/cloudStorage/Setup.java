@@ -7,6 +7,11 @@ import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
 import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 
+/**
+ * A setup for modeling one honest client interacting with possibly dishonest server
+ * and -- possibly -- other dishonest clients. All the dishonest parties are subsumed
+ * by the adversary.
+ */
 public class Setup {
 
 	public static final int HONEST_CLIENT_ID = 100;
@@ -16,18 +21,6 @@ public class Setup {
 	}
 
 	public static void setup(boolean secret_bit) {
-		// Create and register the server
-		PKIEnc.Decryptor server_decryptor = new PKIEnc.Decryptor(Params.SERVER_ID);
-		PKISig.Signer server_signer = new PKISig.Signer(Params.SERVER_ID);
-		try {
-			PKIEnc.register(server_decryptor.getEncryptor(), Params.PKI_ENC_DOMAIN);
-			PKISig.register(server_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
-		} 
-		catch (PKIError | NetworkError e) { // registration failed
-			return;
-		}
-		Server server = new Server(server_decryptor, server_signer);
-
 		// Create and register the client
 		// (we consider one honest client; the remaining clients will be subsumed 
 		// by the adversary)
@@ -40,7 +33,7 @@ public class Setup {
 			PKISig.register(client_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
 			client = new Client(client_symenc, client_decryptor, client_signer);
 		} 
-		catch (PKIError | NetworkError e) { // registration failed or it was impossible to obtein the server public keys
+		catch (PKIError | NetworkError e) { // registration failed or it was impossible to obtain the server public keys
 			return;
 		}
 
@@ -62,13 +55,7 @@ public class Setup {
 				client.retreive(label);	// the result (the retrieved message) is ignored
 				break;
 
-			case 2: // server.processRequest
-				byte[] message = Environment.untrustedInputMessage();
-				byte[] responce = server.processRequest(message);
-				Environment.untrustedOutputMessage(responce);
-				break;
-
-			case 3: // registering a corrupted encryptor
+			case 2: // registering a corrupted encryptor
 				byte[] pub_key = Environment.untrustedInputMessage();
 				int enc_id = Environment.untrustedInput();
 				PKIEnc.Encryptor corrupted_encryptor = new PKIEnc.Encryptor(enc_id, pub_key);
@@ -78,7 +65,7 @@ public class Setup {
 				catch (Exception e) {}
 				break;
 
-			case 4: // registering a corrupted verifier
+			case 3: // registering a corrupted verifier
 				byte[] verif_key = Environment.untrustedInputMessage();
 				int verif_id = Environment.untrustedInput();
 				PKISig.Verifier corrupted_verifier = new PKISig.Verifier(verif_id, verif_key);
