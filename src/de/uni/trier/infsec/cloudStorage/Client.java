@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.cloudStorage;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
@@ -38,74 +37,83 @@ public class Client {
 	 * @param message the message which has to be stored
 	 * @param label the label related to the message
 	 */
-	public void store(byte[] msg, byte[] label){
+	public void store(byte[] msg, byte[] label) throws NetworkError, IncorrectSignature, IncorrectReply{
 		/**
 		 * SEND A MESSAGE TO A SERVER
 		 */
-		// 1. encrypt the message and add the label
-		
-		byte[] toStore= MessageTools.concatenate(symenc.encrypt(msg), label); // Correct with symmetric key?
-		
-		// 2. add count
-		int count=0;
+		// 1. encrypt the message with the symmetric key
+		byte[] encrMsg = symenc.encrypt(msg);
+		// 2. takes the counter
+		int counter=0;
 		if(list.containsKey(label))
-			count=((Integer) list.get(label)).intValue()+1;
-		list.put(label, new Integer(count));
+			counter=((Integer) list.get(label)).intValue()+1;
+		list.put(label, new Integer(counter));
 		
-		toStore=MessageTools.concatenate(toStore, MessageTools.intToByteArray(count));
-		
-		// 3. sign the message with the client private key 
-		byte[] signature = signer.sign(toStore);
-		
-		// 4. encrypt the (message+signature) with the server public key
-		byte[] msgToSend=server_enc.encrypt(MessageTools.concatenate(toStore, signature));
-		
+		byte[] signClient=null;
+		byte[] serverResp;
+		int ack;
+		int attempts=0;
+		do{
+			serverResp = sendToServer(encrMsg, label, counter, signClient);
+			/**
+			 * Expected serverResp
+			 * Let
+			 * SIGNclient = SIGNclient([ENC_SIM(msg),label,count])
+			 * 
+			 * ENC_PUclient{SIGNclient, 0, SIGNserver([SIGNclient, 0]) }
+			 * 		or
+			 * ENC_PUclient{lastCounter, SIGNclient, 1, SIGNserver([ lastCounter, SIGNclient, 1]) }
+			 */
+			
+			/**
+			 * HANDLE THE RESPONSE FROM THE SERVER
+			 */
+			// 1. decrypt the message with the client private key
+			serverResp = decryptor.decrypt(serverResp);
+			
+			// 2. msgResponse should have this structure: (message, signatureServer)
+			byte[] msgResponse = MessageTools.first(serverResp);
+			byte[] signatureServer = MessageTools.second(serverResp);
+			
+			// 3. verify the signature
+			if (!server_ver.verify(signatureServer, msgResponse))
+				throw new IncorrectSignature();
+				
+			// 4. analyze the ack
+			ack = MessageTools.byteArrayToInt(MessageTools.second(msgResponse));
+			byte[] tmp=MessageTools.first(msgResponse);
+			if(ack==0){ // tmp is just the signature of the message sent
+				// check whether the signature received is the signature of the message sent
+				if(!Arrays.equals(signClient, tmp)) 
+							throw new IncorrectReply();
+			} else {
+				// tmp is (last_count, signature)
+				if(!Arrays.equals(signClient, MessageTools.second(tmp)))
+					throw new IncorrectReply();
+				counter = MessageTools.byteArrayToInt(MessageTools.first(tmp));
+			}
+			attempts++;
+		} while(ack!=0 && attempts<Params.CLIENT_ATTEMPTS);
+	}
+	
+	
+	private byte[] sendToServer(byte[] encrMsg, byte[] label, int counter, byte[] signature) throws NetworkError{
 		/**
 		 * Shape of msgToSend
-		 *   ENC_PUserver{ENC_SIM(msg),label,count, SIGNclient([ENC_SIM(msg),label,count])} 
+		 *   ENC_PUserver{ENC_SIM(msg),label,counter, SIGNclient([ENC_SIM(msg),label,count])} 
 		 */
 		
-		// 5. send the message to the server and take the response
-		byte[] serverResp;
-		try{
-			serverResp = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT);
-		} catch(NetworkError e) {
-			return;
-		}
-		/**
-		 * Expected serverResp
-		 * Let
-		 * SIGNclient = SIGNclient([ENC_SIM(msg),label,count])
-		 * 
-		 * ENC_PUclient{SIGNclient, 0, SIGNserver([SIGNclient, 0]) }
-		 * 		or
-		 * ENC_PUclient{lastCounter, SIGNclient, 1, SIGNserver([ lastCounter, SIGNclient, 1]) }
-		 */
+		byte[] msgToSend= MessageTools.concatenate(encrMsg, label); 
+		msgToSend = MessageTools.concatenate(msgToSend, MessageTools.intToByteArray(counter));
+				
+		// 3. sign the message with the client private key 
+		signature = signer.sign(msgToSend);
+				
+		// 4. encrypt the (message+signature) with the server public key
+		msgToSend = server_enc.encrypt(MessageTools.concatenate(msgToSend, signature));
 		
-		
-		/**
-		 * HANDLE THE RESPONSE FROM THE SERVER
-		 */
-		// 1. decrypt the message with the client private key
-		serverResp = decryptor.decrypt(serverResp);
-		
-		// 2. msgResponse should have this structure: (message, signatureServer)
-		byte[] msgResponse = MessageTools.first(serverResp);
-		byte[] signatureServer = MessageTools.second(serverResp);
-		
-		// 3. verify the signature
-		if (!server_ver.verify(signatureServer, msgResponse))
-			return; 	// or maybe throw an exception!
-		
-		// 4. analyze the Ack
-		int ack = MessageTools.byteArrayToInt(MessageTools.second(msgResponse));
-		/*
-		if(ack==0)
-			// everything fine!
-		else
-			// the "count" variable in the message sent is lower 
-			// than the last counter in the server with that label! 
-		*/
+		// 5. send the message to the server and return the response
+		return NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT);
 	}
 	
 	/**
@@ -117,4 +125,11 @@ public class Client {
 	public byte[] retreive(byte[] label){
 		return null;
 	}
+	
+	@SuppressWarnings("serial")
+	public class IncorrectSignature extends Exception {}
+	
+	@SuppressWarnings("serial")
+	public class IncorrectReply extends Exception {}
+
 }

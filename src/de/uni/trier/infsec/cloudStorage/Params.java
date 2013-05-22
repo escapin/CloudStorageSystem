@@ -9,4 +9,7 @@ public class Params {
 	
 	public static String SERVER_NAME = "192.168.1.1";
 	public static int SERVER_PORT= 8080;
+	
+	public static int CLIENT_ATTEMPTS=3; 
+	// how many times the client attempts to send a message to the server with the proper count 
 }
