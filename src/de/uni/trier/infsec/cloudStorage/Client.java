@@ -19,8 +19,7 @@ public class Client {
 	private PKIEnc.Encryptor server_enc;
 	private PKISig.Verifier server_ver;
 	
-	private CountList list = new CountList(); // FIXME: 'list' is not a very informative name; could we have something better?
-	//private Map<byte[], Integer>  list= new HashMap<byte[], Integer>(); 
+	private LabelList lastCounter = new LabelList(); // for each label maintains the last counter
 	
 	public Client(SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
 		this.symenc = symenc;
@@ -38,25 +37,41 @@ public class Client {
 	 * @param label the label related to the message
 	 */
 	public void store(byte[] msg, byte[] label) throws NetworkError, IncorrectSignature, IncorrectReply{
-		// FIXME: we do we use this kind of comments? Is it suppose to show up in javadocs?
-		/**
-		 * SEND A MESSAGE TO A SERVER
+		/* 
+		 * SEND A MESSAGE TO A SERVER 
 		 */
-		// 1. encrypt the message with the symmetric key
+		// 1. encrypt the message with the symmetric key and encode it with the label
 		byte[] encrMsg = symenc.encrypt(msg);
-		// 2. takes the counter
-		int counter=0;
-		if(list.containsKey(label))
-			counter=((Integer) list.get(label)).intValue()+1; // FIXME: why these conversions? We simply want to store values of type int 
-		list.put(label, new Integer(counter));
+		byte[] msg_label = MessageTools.concatenate(encrMsg, label); 
 		
-		byte[] signClient=null;
-		byte[] serverResp;
+		// 2. pick the last the counter
+		int counter=0;
+		if(lastCounter.containsKey(label))
+			counter = lastCounter.get(label)+1; 
+		lastCounter.put(label, counter);
+		
+		byte[] msg_label_counter, signClient, msgToSend, serverResp;
 		int ack;
 		int attempts=0;
 		do{
-			serverResp = sendToServer(encrMsg, label, counter, signClient); // FIXME: signClient is null
-			/**
+			msg_label_counter = MessageTools.concatenate(msg_label, MessageTools.intToByteArray(counter));
+			
+			// 3. sign the message with the client private key 
+			signClient = signer.sign(msg_label_counter);
+			
+			// 4. encrypt the (message, signature) with the server public key
+			msgToSend = server_enc.encrypt(MessageTools.concatenate(msg_label_counter, signClient));
+			
+			// 5. send the message to the server
+			
+			/* Shape of msgToSend
+			 *   ENC_PUserver{ENC_SIM(msg),label,counter, SIGNclient([ENC_SIM(msg),label,count])} 
+			 */
+			serverResp = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT); 
+			
+			/* 
+			 * HANDLE THE SERVERR RESPONSE 
+			 *
 			 * Expected serverResp
 			 * Let
 			 * SIGNclient = SIGNclient([ENC_SIM(msg),label,count])
@@ -65,12 +80,10 @@ public class Client {
 			 * 		or
 			 * ENC_PUclient{lastCounter, SIGNclient, 1, SIGNserver([ lastCounter, SIGNclient, 1]) }
 			 */
-			
-			/**
-			 * HANDLE THE RESPONSE FROM THE SERVER
-			 */
 			// 1. decrypt the message with the client private key
 			serverResp = decryptor.decrypt(serverResp);
+			
+			// FIXME: Should we check the correct shape of the response before processing it?
 			
 			// 2. msgResponse should have this structure: (message, signatureServer)
 			byte[] msgResponse = MessageTools.first(serverResp);
@@ -82,42 +95,19 @@ public class Client {
 				
 			// 4. analyze the ack
 			ack = MessageTools.byteArrayToInt(MessageTools.second(msgResponse));
-			byte[] tmp=MessageTools.first(msgResponse);
-			if(ack==0){ // tmp is just the signature of the message sent
+			byte[] rest=MessageTools.first(msgResponse);
+			if(ack==0){ // rest is just the signature of the message sent
 				// check whether the signature received is the signature of the message sent
-				if(!Arrays.equals(signClient, tmp)) // FIXME: as noted, signClient is null (the same below);
+				if(!Arrays.equals(signClient, rest))
 							throw new IncorrectReply();
 			} else {
-				// tmp is (last_count, signature)
-				if(!Arrays.equals(signClient, MessageTools.second(tmp)))
+				// rest is (last_count, signature)
+				if(!Arrays.equals(signClient, MessageTools.second(rest)))
 					throw new IncorrectReply();
-				counter = MessageTools.byteArrayToInt(MessageTools.first(tmp)); // FIXME: it should be probaly +1, shouldn't it?
+				counter = MessageTools.byteArrayToInt(MessageTools.first(rest))+1;
 			}
 			attempts++;
 		} while(ack!=0 && attempts<Params.CLIENT_ATTEMPTS);
-	}
-	
-	
-	private byte[] sendToServer(byte[] encrMsg, byte[] label, int counter, byte[] signature) throws NetworkError{
-		/**
-		 * Shape of msgToSend
-		 *   ENC_PUserver{ENC_SIM(msg),label,counter, SIGNclient([ENC_SIM(msg),label,count])} 
-		 */
-		
-		byte[] msgToSend= MessageTools.concatenate(encrMsg, label); 
-		// FIXME: we do not need to save variable names. It would be nicer (for me at least), if we use 
-		// different variable names to indicate different messages. In this case, the name msgToSend 
-		// is misleading, as it is not yet the message to sent. 
-		msgToSend = MessageTools.concatenate(msgToSend, MessageTools.intToByteArray(counter));
-				
-		// 3. sign the message with the client private key 
-		signature = signer.sign(msgToSend); // FIXME: the value of parameter 'signature' is ignored; why do we have this parameter then?
-				
-		// 4. encrypt the (message+signature) with the server public key
-		msgToSend = server_enc.encrypt(MessageTools.concatenate(msgToSend, signature));
-		
-		// 5. send the message to the server and return the response
-		return NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT);
 	}
 	
 	/**
