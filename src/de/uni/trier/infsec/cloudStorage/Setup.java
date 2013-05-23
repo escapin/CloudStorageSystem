@@ -47,7 +47,10 @@ public class Setup {
 				byte[] msg1 = Environment.untrustedInputMessage();
 				byte[] msg2 = Environment.untrustedInputMessage();
 				byte[] msg = (secret_bit ? msg1 : msg2);
-				client.store(msg, label);
+				try {
+					client.store(msg, label);
+				}
+				catch(Exception e) {}
 				break;
 
 			case 1: // client.retrieve
