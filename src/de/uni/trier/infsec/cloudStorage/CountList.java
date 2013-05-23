@@ -18,7 +18,7 @@ public class CountList {
 	 */
 	static class Pair {
 		byte[] key;
-		Object count;
+		Object count; // FIXME: why do we store object if we only want to store ints?
 		Pair next;
 		public Pair(byte[] key, Object count, Pair next) {
 			this.key = key;

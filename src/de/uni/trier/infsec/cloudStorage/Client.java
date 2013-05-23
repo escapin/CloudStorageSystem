@@ -19,7 +19,7 @@ public class Client {
 	private PKIEnc.Encryptor server_enc;
 	private PKISig.Verifier server_ver;
 	
-	private CountList list = new CountList();
+	private CountList list = new CountList(); // FIXME: 'list' is not a very informative name; could we have something better?
 	//private Map<byte[], Integer>  list= new HashMap<byte[], Integer>(); 
 	
 	public Client(SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
@@ -38,6 +38,7 @@ public class Client {
 	 * @param label the label related to the message
 	 */
 	public void store(byte[] msg, byte[] label) throws NetworkError, IncorrectSignature, IncorrectReply{
+		// FIXME: we do we use this kind of comments? Is it suppose to show up in javadocs?
 		/**
 		 * SEND A MESSAGE TO A SERVER
 		 */
@@ -46,7 +47,7 @@ public class Client {
 		// 2. takes the counter
 		int counter=0;
 		if(list.containsKey(label))
-			counter=((Integer) list.get(label)).intValue()+1;
+			counter=((Integer) list.get(label)).intValue()+1; // FIXME: why these conversions? We simply want to store values of type int 
 		list.put(label, new Integer(counter));
 		
 		byte[] signClient=null;
@@ -54,7 +55,7 @@ public class Client {
 		int ack;
 		int attempts=0;
 		do{
-			serverResp = sendToServer(encrMsg, label, counter, signClient);
+			serverResp = sendToServer(encrMsg, label, counter, signClient); // FIXME: signClient is null
 			/**
 			 * Expected serverResp
 			 * Let
@@ -84,13 +85,13 @@ public class Client {
 			byte[] tmp=MessageTools.first(msgResponse);
 			if(ack==0){ // tmp is just the signature of the message sent
 				// check whether the signature received is the signature of the message sent
-				if(!Arrays.equals(signClient, tmp)) 
+				if(!Arrays.equals(signClient, tmp)) // FIXME: as noted, signClient is null (the same below);
 							throw new IncorrectReply();
 			} else {
 				// tmp is (last_count, signature)
 				if(!Arrays.equals(signClient, MessageTools.second(tmp)))
 					throw new IncorrectReply();
-				counter = MessageTools.byteArrayToInt(MessageTools.first(tmp));
+				counter = MessageTools.byteArrayToInt(MessageTools.first(tmp)); // FIXME: it should be probaly +1, shouldn't it?
 			}
 			attempts++;
 		} while(ack!=0 && attempts<Params.CLIENT_ATTEMPTS);
@@ -104,10 +105,13 @@ public class Client {
 		 */
 		
 		byte[] msgToSend= MessageTools.concatenate(encrMsg, label); 
+		// FIXME: we do not need to save variable names. It would be nicer (for me at least), if we use 
+		// different variable names to indicate different messages. In this case, the name msgToSend 
+		// is misleading, as it is not yet the message to sent. 
 		msgToSend = MessageTools.concatenate(msgToSend, MessageTools.intToByteArray(counter));
 				
 		// 3. sign the message with the client private key 
-		signature = signer.sign(msgToSend);
+		signature = signer.sign(msgToSend); // FIXME: the value of parameter 'signature' is ignored; why do we have this parameter then?
 				
 		// 4. encrypt the (message+signature) with the server public key
 		msgToSend = server_enc.encrypt(MessageTools.concatenate(msgToSend, signature));
