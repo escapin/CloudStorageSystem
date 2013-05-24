@@ -5,52 +5,39 @@ import java.util.Arrays;
  * List of labels.
  * For each 'label' maintains an counter representing 
  * how many times the label has been used.
- * 
- * @author scapin
- *
  */
 public class LabelList {
 	
-	/**
-	 * A simple (key, counter) pair
-	 * 
-	 * @author scapin
-	 *
-	 */
-	static class Pair {
+	static class Node {
 		byte[] key;
 		int counter;
-		Pair next;
-		public Pair(byte[] key, int counter, Pair next) {
+		Node next;
+		public Node(byte[] key, int counter, Node next) {
 			this.key = key;
 			this.counter = counter;
 			this.next = next;
 		}
 	}
 	
-	private Pair lastElement = null;
+	private Node firstElement = null;
 	
 	public void put(byte[] key, int counter) {
-		for(Pair tmp = lastElement; tmp != null; tmp=tmp.next)
+		for(Node tmp = firstElement; tmp != null; tmp=tmp.next)
             if( Arrays.equals(key, tmp.key) ){
                 tmp.counter=counter;
                 return;
             }
-		lastElement = new Pair(key, counter, lastElement);
+		firstElement = new Node(key, counter, firstElement);
 	}
 
     public int get(byte[] key) {
-        for(Pair tmp = lastElement; tmp != null; tmp=tmp.next)
+        for(Node tmp = firstElement; tmp != null; tmp=tmp.next)
             if( Arrays.equals(key, tmp.key)  )
                 return tmp.counter;	
-        return -1; // if the label is not present, return a negative counter
+        return -1; // if the label is not present, return -1
     }
     
     public boolean containsKey(byte[] key) {
-        for(Pair tmp = lastElement; tmp != null; tmp = tmp.next) 
-        	if( Arrays.equals(key, tmp.key)  )
-                return true;
-        return false;
+    	return get(key) >= 0;
     }
-    
 }
