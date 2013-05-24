@@ -55,7 +55,10 @@ public class Setup {
 
 			case 1: // client.retrieve
 				label = Environment.untrustedInputMessage();
-				client.retreive(label);	// the result (the retrieved message) is ignored
+				try {
+					client.retreive(label);	// the result (the retrieved message) is ignored
+				}
+				catch(Exception e) {}
 				break;
 
 			case 2: // registering a corrupted encryptor
