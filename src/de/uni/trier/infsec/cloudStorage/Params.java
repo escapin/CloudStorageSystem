@@ -10,6 +10,17 @@ public class Params {
 	public static String SERVER_NAME = "192.168.1.1";
 	public static int SERVER_PORT= 8080;
 	
+	
+	public static byte[] STORE={0};
+	public static byte[] STORE_OK={1};
+	public static byte[] STORE_FAIL={2};
+	
+	public static byte[] RETRIEVE={3};
+	public static byte[] RETRIEVE_OK={4};
+	public static byte[] RETRIEVE_FAIL={5};
+	
+	
+	
 	public static int CLIENT_ATTEMPTS=3; 
 	// how many times the client attempts to send a message to the server with the proper count 
 }

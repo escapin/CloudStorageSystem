@@ -18,15 +18,16 @@ public class Client {
 	private PKIEnc.Encryptor server_enc;
 	private PKISig.Verifier server_ver;
 	
+	private int client_id;
 	private LabelList lastCounter = new LabelList(); // for each label maintains the last counter
 	
-	public Client(SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
+	public Client(int client_id, SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
 		this.symenc = symenc;
 		this.decryptor = decryptor;
 		this.signer = signer;
 		this.server_enc = PKIEnc.getEncryptor(Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
 		this.server_ver = PKISig.getVerifier(Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
-		
+		this.client_id = client_id;
 	}
 	
 	/**
@@ -36,79 +37,85 @@ public class Client {
 	 * @param label the label related to the message
 	 */
 	public void store(byte[] msg, byte[] label) throws NetworkError, MalformedMessage, IncorrectReply{
-		// 1. encrypt the message with the symmetric key and encode it with the label
+		// 1. encrypt the message with the symmetric key
 		byte[] encrMsg = symenc.encrypt(msg);
-		byte[] msg_label = MessageTools.concatenate(encrMsg, label); 
-		
+		 
 		// 2. pick the last the counter
 		int counter = lastCounter.get(label) + 1; // note that if label has not been used, get(label) returns -1
-		lastCounter.put(label, counter); // TODO: is this a good place to do this
 		
 		int attempts=0;
 		do{
-			// Shape of msgToSend
-			//   ENC_PUserver{ENC_SIM(msg),label,counter, SIGNclient([ENC_SIM(msg),label,counter])} 
-			
-			byte[] msg_label_counter = MessageTools.concatenate(msg_label, MessageTools.intToByteArray(counter));
+			/* Encoding the message that has to be signed: (STORE, (label, (counter, encMsg)))  */
+			byte[] counter_msg = MessageTools.concatenate(MessageTools.intToByteArray(counter), encrMsg);
+			byte[] label_counter_msg = MessageTools.concatenate(label, counter_msg);
+			byte[] store_label_counter_msg = MessageTools.concatenate(Params.STORE, label_counter_msg);
 			
 			// 3. sign the message with the client private key 
-			byte[] signature = signer.sign(msg_label_counter);
+			byte[] signClient = signer.sign(store_label_counter_msg);
+			byte[] msgSigned = MessageTools.concatenate(store_label_counter_msg, signClient);
 			
-			// 4. encrypt the (message, signature) with the server public key
-			byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(msg_label_counter, signature));
+			// 4. encrypt the (client_id, message, signature) with the server public key
+			byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(MessageTools.intToByteArray(client_id), msgSigned));
+			
+			// Shape of msgToSend:
+			//		(clientID, ((STORE, (label, (counter, encMsg))), signClient)) 
 			
 			// 5. send the message to the server
 			byte[] encryptedResp = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT);
-			// TODO: since we have 'FETCH' for retrieve, shouldn't we have 'PUT' (or something like this) here?
-			
+	
 			// HANDLE THE SERVER RESPONSE 
 			//
-			// Expected serverResp
-			// Let
-			// SIGNclient = SIGNclient([FETCH,label,counter])
-			//
-			// ENC_PUclient{SIGNclient, 0, SIGNserver([SIGNclient, 0]) }
-			// 		or
-			// ENC_PUclient{lastCounter, SIGNclient, 1, SIGNserver([ lastCounter, SIGNclient, 1]) }
-			//
-			// FIXME: it this description up-to-date? What is 'FETCH' doing here?
-			// The type of answer is at diffent positions in 
-			// different replies -- that's stragne.
+			// Expected serverResp:
+			//		((STORE_OK, signClient), signServer)
+			//		((STORE_FAIL, (signClient, lastCounter)), signServer)
+			// 	where in both cases signServer is the signature of the previous tokens
+			
 			
 			// 1. decrypt the message with the client private key
 			byte[] serverResp = decryptor.decrypt(encryptedResp);
 			
-			// FIXME: Should we check the correct shape of the response before processing it?
-			
-			// 2. serverResp should have this structure: (message, signatureServer)
 			byte[] msgResponse = MessageTools.first(serverResp);
-			byte[] signatureServer = MessageTools.second(serverResp);
+			byte[] signServer = MessageTools.second(serverResp);
 			
-			// 3. verify the signature
-			if (!server_ver.verify(signatureServer, msgResponse))
+			// 2. if one of the two messages is empty (length==0) or the signature isn't correct, the message is malformed
+			if (msgResponse.length==0 || signServer.length==0 || !server_ver.verify(signServer, msgResponse))
 				throw new MalformedMessage();
-				
-			// TODO: We need to discuss this process again.
-			// 4. analyze the ack
-			int ack = MessageTools.byteArrayToInt(MessageTools.second(msgResponse));
-			// FIXME: I think that it is nicer if ack (encoding the type of response) is the first part of the first
-			// part of the response, because the format of the rest depends on it.
-			byte[] rest=MessageTools.first(msgResponse);
-			if(ack==0){ // rest is just the signature of the message sent
-				if(attempts>0)	// if we aren't in the first attempt we have to update the counter to the proper label in 'lastCounter'
-					lastCounter.put(label, counter); // FIXME:  it should be done when the counter gets changed.
-				
-				// check whether the signature received is the signature of the message sent or not
-				if(!Arrays.equals(signature, rest))
-							throw new IncorrectReply();
-				return;
-			} else {
-				// rest is (last_count, signature)
-				if(!Arrays.equals(signature, MessageTools.second(rest)))
+			
+			// 3. analyze the ack
+			byte[] ack = MessageTools.first(msgResponse);
+			
+			if(Arrays.equals(ack, Params.STORE_OK)){
+				// 4a. the server said the message has been stored correctly
+				// we have just to verify that the signClient sent by the server is the same 
+				// we generate when we sent the message
+				byte[] signature = MessageTools.second(msgResponse);
+				if(signature.length==0)
+					throw new MalformedMessage();
+				if(!Arrays.equals(signature, signClient))
 					throw new IncorrectReply();
-				counter = MessageTools.byteArrayToInt(MessageTools.first(rest))+1; 
-				// FIXME: we have to check whether it is not smaller than our current counter. 
+				// we can save the counter used to send the message
+				lastCounter.put(label, counter);
+				return;
 			}
+			else if(Arrays.equals(ack, Params.STORE_FAIL)){
+				// 4b. server claims to have an higher counter
+				byte[] signature_lastCounter = MessageTools.second(msgResponse);
+				if(signature_lastCounter.length==0)
+					throw new MalformedMessage();
+				byte[] signature = MessageTools.first(signature_lastCounter);
+				byte[] lastCounter= MessageTools.second(signature_lastCounter);
+				if(signature.length==0 || lastCounter.length==0)
+					throw new MalformedMessage();
+				
+				int serverCounter = MessageTools.byteArrayToInt(lastCounter);
+				// if the counter which the server provided is smaller than our current counter, 
+				// someone is cheating 
+				if(!Arrays.equals(signature, signClient) || serverCounter<counter)
+					throw new IncorrectReply();
+				counter=serverCounter+1;
+			}
+			else
+				throw new MalformedMessage();
 			attempts++;
 		} while(attempts<Params.CLIENT_ATTEMPTS);		
 	}
