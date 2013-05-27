@@ -46,7 +46,11 @@ public class Setup {
 				byte[] label = Environment.untrustedInputMessage();
 				byte[] msg1 = Environment.untrustedInputMessage();
 				byte[] msg2 = Environment.untrustedInputMessage();
-				byte[] msg = (secret_bit ? msg1 : msg2); // TODO: do it in the Joana way
+				if (msg1.length != msg2.length) break;
+				byte[] msg = new byte[msg1.length];
+				for (int i=0; i<msg1.length; ++i) {
+					msg[i] = (secret_bit ? msg1[i] : msg2[i]);
+				}
 				try {
 					client.store(msg, label);
 				}
@@ -84,3 +88,4 @@ public class Setup {
 		}
 	}	
 }
+;
