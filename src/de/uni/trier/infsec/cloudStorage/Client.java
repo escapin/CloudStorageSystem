@@ -212,7 +212,6 @@ public class Client {
 		return new ServerResponse( MessageTools.first(response), MessageTools.second(response)); 
 	}
 
-	@SuppressWarnings("serial")
 	public class StorageError extends Exception {}
 
 	/**
@@ -220,21 +219,18 @@ public class Client {
 	 * to an expected format (we get, for instance, a trash message or a response
 	 * to a different request). 
 	 */
-	@SuppressWarnings("serial")
 	public class MalformedMessage extends StorageError {}
 
 	/**
 	 * Exception thrown when the response is invalid and demonstrates that the server
 	 * has misbehaved (the server has be ill-implemented or malicious).
 	 */
-	@SuppressWarnings("serial")
 	public class IncorrectReply extends StorageError {}
 
 	/**
 	 * Exception thrown when the the server is not able to store the message we sent to it, e.g.
 	 * because it has always an higher counter related to our label.
 	 */
-	@SuppressWarnings("serial")
 	public class StoreFailure extends StorageError {}
 	
 	
