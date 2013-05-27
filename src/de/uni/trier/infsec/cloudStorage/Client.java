@@ -35,18 +35,7 @@ public class Client {
 		this.client_id = client_id;
 	}
 
-	// TODO:
-	// the responses of the server are supposed to always have the same structure:
-	// enc(sig[ request ]).
-	// Now, there is quite a bit of redundancy in the code, as for each request the parsing of
-	// this is repeated independently.
-	// Why don't we have a method that would do it for us. We could use it as:
-	// 
-	//    byte response = decryptAndValidateResponse( encryptedSignedResponse )
-	//
-	// (it would throw MalformedMessage if necessary).
-	
-	
+
 	/**
 	 * Store a message on the server under a given label
 	 */
@@ -64,8 +53,8 @@ public class Client {
 			byte[] store_label_counter_msg = MessageTools.concatenate(Params.STORE, label_counter_msg);
 
 			// 3. sign the message with the client private key 
-			byte[] signRequest = signer.sign(store_label_counter_msg);
-			byte[] msgWithSignature = MessageTools.concatenate(store_label_counter_msg, signRequest);
+			byte[] signClient = signer.sign(store_label_counter_msg);
+			byte[] msgWithSignature = MessageTools.concatenate(store_label_counter_msg, signClient);
 
 			// 4. encrypt the (client_id, message, signature) with the server public key
 			byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(MessageTools.intToByteArray(client_id), msgWithSignature));			
@@ -76,60 +65,44 @@ public class Client {
 			// 5. send the message to the server
 			byte[] encryptedSignedResp = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT);
 
-			// HANDLE THE SERVER RESPONSE 
-			//
-			// Expected server's responses (encrypted with the client's public key):
-			//		((STORE_OK, signClient), signServer)
-			//		((STORE_FAIL, (signClient, lastCounter)), signServer)
-			// where in both cases signServer is the signature of the previous tokens
-			// and lastCounter is the last value of the counter associated with label, 
-			// as stored by the server.
-
-			// 1. decrypt the message with the client private key
-			byte[] signedResponse = decryptor.decrypt(encryptedSignedResp);
-
-			byte[] response = MessageTools.first(signedResponse);
-			byte[] signServer = MessageTools.second(signedResponse);
-
-			// 2. if the signature isn't correct, the message is malformed
-			// (note that the signature is incorrect if one or both messages are empty)
-			if (!server_ver.verify(signServer, response))
-				throw new MalformedMessage();
-
-			// 3. analyze the message tag
-			byte[] tag = MessageTools.first(response);
+			/* HANDLE THE SERVER RESPONSE
+			 * Expected server's responses (encrypted with the client's public key):
+			 * 			((STORE_OK, signClient), signServer)							or
+			 * 			((STORE_FAIL, lastCounter) signClient), signServer)
+			 * where:
+			 * - signServer: signature of all the previous tokens
+			 * - signClient: signature of the message for which we are receiving the response 
+			 * - lastCounter: the higher value of the counter associated with label, as stored by the server
+			 */
+			
+			// Validate the message in order to be sure that it has been sent by the server
+			// and it's the correct reply of our request
+			byte[] msgCore = decryptValidateResp(encryptedSignedResp, signClient);
+			// msgCore is either STORE_OK or (STORE_FAIL, lastCounter)
+			
+			// analyze the message tag
+			byte[] tag = MessageTools.first(msgCore);
 			if(Arrays.equals(tag, Params.STORE_OK)){
-				// 4a. the server said the message has been stored correctly.
-				// We only have to verify that this is a response to our request, that is 
-				// the response contain the client's signature from the request. 
-				byte[] signature = MessageTools.second(response);
-				if(!Arrays.equals(signature, signRequest)) // the server haven't replied the message we sent
-					throw new MalformedMessage();
 				// we can save the counter used to send the message
 				lastCounter.put(label, counter);
 				return;
 			}
 			else if(Arrays.equals(tag, Params.STORE_FAIL)){ // the server does not accept our request, because it claims
 				                                            // to have a higher counter for this label
-				byte[] signature_lastCounter = MessageTools.second(response);
-				if(signature_lastCounter.length==0)
+				byte[] lastCounter = MessageTools.second(msgCore);
+				if(lastCounter.length!=4) // since lastCounter is supposed to be a integer, its length must be 4 bytes
 					throw new MalformedMessage();
-				byte[] signature = MessageTools.first(signature_lastCounter);
-				byte[] lastCounter= MessageTools.second(signature_lastCounter);
-				if(signature.length==0 || lastCounter.length==0)
-					throw new MalformedMessage();
-				// FIXME: what happens below if lastCounter is too long for the encoding of an int? Perhaps we should
-				// be more specific in the test above
 				int serverCounter = MessageTools.byteArrayToInt(lastCounter); 
-				if (!Arrays.equals(signature, signRequest)) // the server haven't replied to the message we sent
-					throw new MalformedMessage();
 				if (serverCounter<counter) // the server is misbehaving (his counter is expected to be higher)
 					throw new IncorrectReply();
 				counter = serverCounter+1;
 			}
 			else
 				throw new MalformedMessage();
-		}		
+		}
+		throw new StoreFailure(); 
+		// This exception could be thrown when several clients try to store 
+		// concurrently a message into the server with the same 'label'.
 	}
 
 	/**
@@ -150,8 +123,8 @@ public class Client {
 		byte[] retrieve_label_counter = MessageTools.concatenate(Params.RETRIEVE, label_counter);
 
 		// 3. sign the message
-		byte[] signRequest = signer.sign(retrieve_label_counter);
-		byte[] msgWithSignature = MessageTools.concatenate(retrieve_label_counter, signRequest);
+		byte[] signClient = signer.sign(retrieve_label_counter);
+		byte[] msgWithSignature = MessageTools.concatenate(retrieve_label_counter, signClient);
 
 		// 4. encrypt (client_id, message, signature) with the server public key
 		byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(MessageTools.intToByteArray(client_id), msgWithSignature));
@@ -160,16 +133,72 @@ public class Client {
 		// where signClient is the signature of (RETRIEVE, (label, counter))
 
 		// 5. send the message to the server
-		byte[] encryptedSignedResponse = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT); 
+		byte[] encryptedSignedResp = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT); 
 
-		// HANDLE THE SERVER RESPONSE 
-		//
-		// Expected serverer responces (encrypted):
-		//		((RETRIEVE_OK, (signClient, (encMsg, signEncrMsg))), signServer)
-		//		((RETRIEVE_FAIL, signClient), signServer)
-		// 	where in both cases signServer is the signature of the previous tokens,
-		//  whereas signEncMsg is the signature of ((STORE, (label, (counter, encrMsg)))
+		
+		
+		/* HANDLE THE SERVER RESPONSE
+		 * Expected server's responses (encrypted with the client's public key):
+		 * 			(((RETRIEVE_OK, (encMsg, signEncrMsg)), signClient), signServer)							or
+		 * 			((RETRIEVE_FAIL, signClient), signServer)
+		 * where:
+		 * - signServer: signature of all the previous tokens
+		 * - signClient: signature of the message for which we are receiving the response 
+		 * - signEncMsg: the signature of ((STORE, (label, (counter, encrMsg)))
+		 */
+		
+		// Validate the message in order to be sure that it has been sent by the server
+		// and it's the correct reply of our request
+		byte[] msgCore = decryptValidateResp(encryptedSignedResp, signClient);
+		// msgCore is either (RETRIEVE_OK, (encMsg, signEncrMsg)) or RETRIEVE_FAIL
+		
+		// analyze the response tag
+		byte[] tag = MessageTools.first(msgCore);
 
+		if(Arrays.equals(tag, Params.RETRIEVE_OK)){
+			byte[] encrMsg_signMsg = MessageTools.second(msgCore);
+			byte[] encrMsg = MessageTools.first(encrMsg_signMsg);
+			byte[] signMsg = MessageTools.second(encrMsg_signMsg);
+			// all the security checks about these message are done by verifying that
+			// signMsg is the signature of the STORE request with encrMsg
+			
+			// check whether the signMsg is the signature for the STORE request with encrMsg.
+			// This request is of the form (STORE, (label, (counter, encrMsg)))
+			byte[] counter_msg = MessageTools.concatenate(MessageTools.intToByteArray(counter), encrMsg);
+			byte[] label_counter_msg = MessageTools.concatenate(label, counter_msg);
+			byte[] store_label_counter_msg = MessageTools.concatenate(Params.STORE, label_counter_msg);
+			if(!verifier.verify(signMsg, store_label_counter_msg))  // the server hasn't replied with the encrypted message we requested
+				throw new IncorrectReply();
+	
+			// everything is ok; decrypt the message and return it 
+			return symenc.decrypt(encrMsg);
+		}
+		else if(Arrays.equals(tag, Params.RETRIEVE_FAIL)){
+			// the server counldn't retrieve the message
+			// since we know the server replied to our request and since the 'counter' has been saved
+			// just after the server acknowledged the storing of the message was successful, then why does it fail?
+			throw new IncorrectReply();
+		}
+		else
+			throw new MalformedMessage();
+	}
+	
+	
+	
+	
+	/**
+	 * Decrypt the message, verify that it's a reply from the server and that
+	 * it's the response for the request we sent to it. 
+	 * If no exception are thrown, we know that what 
+	 * we return is a response created by the server for our request.
+	 * Therefore, if anything is wrong with this message, the server is to blame.
+	 * 
+	 * @param encryptedSignedResponse the message received from the network. Its shape should be: EncPUclient{((msgCore, signClient), signServer)}
+	 * @param signRequest the signature of the message we sent to the server
+	 * @return the rest of the message received from the network (msgCore)
+	 * @throws MalformedMessage if something went wrong during the validation process
+	 */
+	private byte[] decryptValidateResp(byte[] encryptedSignedResponse, byte[] signRequest) throws MalformedMessage {
 		// 1. decrypt the message with the client private key and parse it
 		byte[] signedResponse = decryptor.decrypt(encryptedSignedResponse);
 		byte[] response = MessageTools.first(signedResponse);
@@ -179,50 +208,11 @@ public class Client {
 		// (note that the signature is incorrect even if one or both messages are empty)
 		if (!server_ver.verify(signServer, response))
 			throw new MalformedMessage();
-
-		// 3. analyze the response tag
-		byte[] tag = MessageTools.first(response);
-
-		if(Arrays.equals(tag, Params.RETRIEVE_OK)){
-			// 4a. server claims to have retrieved the proper message
-			byte[] signature_encrMsg_signMsg = MessageTools.second(response);
-			if(signature_encrMsg_signMsg.length==0)
-				throw new MalformedMessage();
-			byte[] signature = MessageTools.first(signature_encrMsg_signMsg);
-			byte[] encrMsg_signMsg = MessageTools.second(signature_encrMsg_signMsg);
-			if(!Arrays.equals(signature, signRequest)) // the server hasn't replied to our request
-				throw new MalformedMessage();
-			// Now we know that what we parse is a response created by the server for our request. 
-			// Therefore, if anything is wrong with this message, the server is to blame.
-			byte[] encrMsg = MessageTools.first(encrMsg_signMsg);
-			byte[] signMsg = MessageTools.second(encrMsg_signMsg);
-			if(encrMsg.length==0 || signMsg.length==0)
-				throw new IncorrectReply();
-			// FIXME: again, should we expect some specific value from encrMsg.length?
-
-			// 5. check whether the signMsg is the signature for the STORE request with encMsg.
-			// This request is of the form (STORE, (label, (counter, encrMsg)))
-			byte[] counter_msg = MessageTools.concatenate(MessageTools.intToByteArray(counter), encrMsg);
-			byte[] label_counter_msg = MessageTools.concatenate(label, counter_msg);
-			byte[] store_label_counter_msg = MessageTools.concatenate(Params.STORE, label_counter_msg);
-			if(!verifier.verify(signMsg, store_label_counter_msg))  // the server hasn't replied with the encrypted message we requested
-				throw new IncorrectReply();
-	
-			// 6. everything is ok; decrypt the message and return it 
-			return symenc.decrypt(encrMsg);
-		}
-		else if(Arrays.equals(tag, Params.RETRIEVE_FAIL)){
-			// 4b. the server counldn't retrieve the message
-			byte[] signature = MessageTools.second(response);
-			if(signature.length==0)
-				throw new MalformedMessage();
-			if(!Arrays.equals(signature, signRequest)) // the server haven't replied to the message we sent
-				throw new MalformedMessage();
-			// now we know that the server replied to our request; but then why does it fail?
-			throw new IncorrectReply();
-		}
-		else
+		// 3. check whether the server are responding exactly to the message we sent 
+		byte[] signature = MessageTools.second(response);
+		if(!Arrays.equals(signature, signRequest))
 			throw new MalformedMessage();
+		return MessageTools.first(response); // we return the rest of the message
 	}
 
 	@SuppressWarnings("serial")
@@ -243,6 +233,14 @@ public class Client {
 	@SuppressWarnings("serial")
 	public class IncorrectReply extends StorageError {}
 
+	/**
+	 * Exception thrown when the the server is not able to store the message we sent to it, e.g.
+	 * because it has always an higher counter related to our label.
+	 */
+	@SuppressWarnings("serial")
+	public class StoreFailure extends StorageError {}
+	
+	
 	/**
 	 * List of labels.
 	 * For each 'label' maintains an counter representing 
