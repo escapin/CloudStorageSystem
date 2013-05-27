@@ -46,7 +46,7 @@ public class Setup {
 				byte[] label = Environment.untrustedInputMessage();
 				byte[] msg1 = Environment.untrustedInputMessage();
 				byte[] msg2 = Environment.untrustedInputMessage();
-				byte[] msg = (secret_bit ? msg1 : msg2);
+				byte[] msg = (secret_bit ? msg1 : msg2); // TODO: do it in the Joana way
 				try {
 					client.store(msg, label);
 				}
