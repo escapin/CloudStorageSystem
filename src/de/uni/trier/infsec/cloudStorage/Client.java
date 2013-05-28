@@ -67,8 +67,8 @@ public class Client {
 
 			/* HANDLE THE SERVER RESPONSE
 			 * Expected server's responses (encrypted with the client's public key):
-			 * 			((STORE_OK, signClient), signServer)							or
-			 * 			((STORE_FAIL, lastCounter) signClient), signServer)
+			 * 			((signClient, STORE_OK), signServer)							or
+			 * 			((signClient, (STORE_FAIL, lastCounter)), signServer)
 			 * where:
 			 * - signServer: signature of all the previous tokens
 			 * - signClient: signature of the message for which we are receiving the response 
@@ -136,8 +136,8 @@ public class Client {
 				
 		/* HANDLE THE SERVER RESPONSE
 		 * Expected server's responses (encrypted with the client's public key):
-		 * 			(((RETRIEVE_OK, (encMsg, signEncrMsg)), signClient), signServer)							or
-		 * 			((RETRIEVE_FAIL, signClient), signServer)
+		 * 			((signClient, (RETRIEVE_OK, (encMsg, signEncrMsg))), signServer)					or
+		 * 			((signClient, RETRIEVE_FAIL), signServer)
 		 * where:
 		 * - signServer: signature of all the previous tokens
 		 * - signClient: signature of the message for which we are receiving the response 
@@ -150,7 +150,7 @@ public class Client {
 		// msgCore is either (RETRIEVE_OK, (encMsg, signEncrMsg)) or RETRIEVE_FAIL
 		
 		// analyze the response tag
-			if(Arrays.equals(response.tag, Params.RETRIEVE_OK)){
+		if(Arrays.equals(response.tag, Params.RETRIEVE_OK)){
 			byte[] encrMsg = MessageTools.first(response.info);
 			byte[] signMsg = MessageTools.second(response.info);
 			// check whether the signMsg is the signature for the STORE request with encrMsg
@@ -191,7 +191,7 @@ public class Client {
 	 * 
 	 * @param encryptedSignedResponse the message received from the network. Its shape should be: Enc_Client{((signClient, msgCore), signServer)}
 	 * @param signRequest the signature on the client's request
-	 * @return the rest of the message received from the network (msgCore)
+	 * @return a ServerResponse object
 	 * @throws MalformedMessage if something went wrong during the validation process
 	 */
 	private ServerResponse decryptValidateResp(byte[] encryptedSignedResponse, byte[] signRequest) throws MalformedMessage {
@@ -208,7 +208,7 @@ public class Client {
 		byte[] signatureClient = MessageTools.first(payload);
 		if(!Arrays.equals(signatureClient, signRequest))
 			throw new MalformedMessage();
-		byte[] response = MessageTools.second(payload); // response should be of the form (tag, info), where info may be emtpy
+		byte[] response = MessageTools.second(payload); // response should be of the form (tag, info), where info may be empty
 		return new ServerResponse( MessageTools.first(response), MessageTools.second(response)); 
 	}
 
@@ -236,7 +236,6 @@ public class Client {
 	 */
 	@SuppressWarnings("serial")
 	public class StoreFailure extends StorageError {}
-	
 	
 	/**
 	 * List of labels.

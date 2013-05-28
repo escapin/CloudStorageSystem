@@ -1,6 +1,7 @@
 package de.uni.trier.infsec.cloudStorage;
 
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
+import de.uni.trier.infsec.utils.MessageTools;
 
 public class Server{
 	
@@ -14,8 +15,11 @@ public class Server{
 	 * @return
 	 */
 	public static byte[] processRequest(byte[] request){
-		// 1. decrypt the request with the server private key		
-		byte[] msg = server_decr.decrypt(request);
+		// decrypt the request from one client	
+		// (clientID, ((STORE, (label, (counter, encMsg))), signClient))
+		// (clientID, ((RETRIEVE, (label, counter)), signClient))
+		byte[] id_payload_signClient = server_decr.decrypt(request);
+		
 		
 		return null;
 	}
