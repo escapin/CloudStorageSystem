@@ -8,11 +8,12 @@ import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
 import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 import de.uni.trier.infsec.environment.network.NetworkClient;
 import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.cloudStorageException.*;
 import de.uni.trier.infsec.utils.*;
 
 public class Client {
 
-	private static int STORE_ATTEMPTS=3; 
+	private static int STORE_ATTEMPTS=3;
 	// how many times the client attempts to send a message to the server with the proper count 
 
 	private SymEnc symenc;
@@ -212,30 +213,6 @@ public class Client {
 		return new ServerResponse( MessageTools.first(response), MessageTools.second(response)); 
 	}
 
-	@SuppressWarnings("serial")
-	public class StorageError extends Exception {}
-
-	/**
-	 * Exception thrown when the response of the server does not conform
-	 * to an expected format (we get, for instance, a trash message or a response
-	 * to a different request). 
-	 */
-	@SuppressWarnings("serial")
-	public class MalformedMessage extends StorageError {}
-
-	/**
-	 * Exception thrown when the response is invalid and demonstrates that the server
-	 * has misbehaved (the server has be ill-implemented or malicious).
-	 */
-	@SuppressWarnings("serial")
-	public class IncorrectReply extends StorageError {}
-
-	/**
-	 * Exception thrown when the the server is not able to store the message we sent to it, e.g.
-	 * because it has always an higher counter related to our label.
-	 */
-	@SuppressWarnings("serial")
-	public class StoreFailure extends StorageError {}
 	
 	/**
 	 * List of labels.
