@@ -19,8 +19,8 @@ public class Server{
 	 */
 	public static byte[] processRequest(byte[] request) throws StorageError, NetworkError, PKIError {
 		/*
-		 * Every request is shaped:
-		 * 		Enc_Server{ clientID, [payload], signClient }
+		 * Every request has this shape:
+		 * 		Enc_Server{ (clientID, ([payload], signClient)) }
 		 * 
 		 * where 'signClient' is the signature of the payload made by the client		
 		 */
@@ -35,7 +35,7 @@ public class Server{
 		byte[] payload_signClient=MessageTools.second(id_payload_signClient);
 		byte[] payload = MessageTools.first(payload_signClient);
 		byte[] signClient=MessageTools.second(payload_signClient);
-		// verify the message comes from the client 'clientID'
+		// verify that the message comes from the client 'clientID'
 		PKISig.Verifier clientVerifier = PKISig.getVerifier(clientID, Params.PKI_DSIG_DOMAIN);
 		if(!clientVerifier.verify(signClient, payload))
 			throw new MalformedMessage();
@@ -54,7 +54,7 @@ public class Server{
 		
 		/*
 		 * The shape of the response must be:
-		 * 		Enc_client{ ((signClient, [payloadResp]), signServer }
+		 * 		Enc_client{ ((signClient, [payloadResp]), signServer) }
 		 * 
 		 * where 'signServer' is the signature of the previous tokens 
 		 */

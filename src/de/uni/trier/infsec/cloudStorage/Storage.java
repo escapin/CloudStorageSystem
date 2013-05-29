@@ -25,7 +25,6 @@ public class Storage {
 	
 	/**
 	 * Store a message and its signature under the index (label, counter)
-	 * 
 	 */
 	public void insert(byte[] label, int counter, byte[] msg, byte[] msgSign){
 		storage.put(new KeyStorage(label.toString(), counter), MessageTools.concatenate(msg, msgSign));
@@ -51,7 +50,7 @@ public class Storage {
 	}
 	
 	/**
-	 * Return the higher counter associated with this label
+	 * Return the higher counter associated with a particular label
 	 */
 	public int getLastCounter(byte[] label){
 		// What if maxCount.get(label.toString()) is null?
