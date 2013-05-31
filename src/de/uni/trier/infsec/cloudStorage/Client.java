@@ -8,7 +8,6 @@ import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
 import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 import de.uni.trier.infsec.environment.network.NetworkClient;
 import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.cloudStorageException.*;
 import de.uni.trier.infsec.utils.*;
 
 public class Client {
@@ -23,17 +22,17 @@ public class Client {
 	private PKIEnc.Encryptor server_enc;
 	private PKISig.Verifier server_ver;
 
-	private int client_id;
+	private int userID;
 	private LabelList lastCounter = new LabelList(); // for each label maintains the last counter
 
-	public Client(int client_id, SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
+	public Client(int userID, SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
 		this.symenc = symenc;
 		this.decryptor = decryptor;
 		this.signer = signer;
 		this.verifier = signer.getVerifier();
 		this.server_enc = PKIEnc.getEncryptor(Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
 		this.server_ver = PKISig.getVerifier(Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
-		this.client_id = client_id;
+		this.userID = userID;
 	}
 
 
@@ -58,7 +57,7 @@ public class Client {
 			byte[] msgWithSignature = MessageTools.concatenate(store_label_counter_msg, signClient);
 
 			// 4. encrypt the (client_id, message, signature) with the server public key
-			byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(MessageTools.intToByteArray(client_id), msgWithSignature));			
+			byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(MessageTools.intToByteArray(userID), msgWithSignature));			
 			// Shape of msgToSend:
 			//		(clientID, ((STORE, (label, (counter, encMsg))), signClient))
 			// where signClient is the signature of ((STORE, (label, (counter, encMsg)))
@@ -126,7 +125,7 @@ public class Client {
 		byte[] msgWithSignature = MessageTools.concatenate(retrieve_label_counter, signClient);
 
 		// 4. encrypt (client_id, message, signature) with the server public key
-		byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(MessageTools.intToByteArray(client_id), msgWithSignature));
+		byte[] msgToSend = server_enc.encrypt(MessageTools.concatenate(MessageTools.intToByteArray(userID), msgWithSignature));
 		// Shape of encrypted msgToSend
 		//		(clientID, ((RETRIEVE, (label, counter)), signClient))
 		// where signClient is the signature of (RETRIEVE, (label, counter))
@@ -213,6 +212,28 @@ public class Client {
 		return new ServerResponse( MessageTools.first(response), MessageTools.second(response)); 
 	}
 
+	public class StorageError extends Exception {}
+	
+	/**
+	 * Exception thrown when the response is invalid and demonstrates that the server
+	 * has misbehaved (the server has be ill-implemented or malicious).
+	 */
+	public class IncorrectReply extends StorageError {}
+
+	/**
+	 * Exception thrown when the response of the server does not conform
+	 * to an expected format (we get, for instance, a trash message or a response
+	 * to a different request). 
+	 */
+	public class MalformedMessage extends StorageError {}
+	
+	
+	/**
+	 * Exception thrown when the the server is not able to store the message we sent to it, e.g.
+	 * because it has always an higher counter related to our label.
+	 */
+	public class StoreFailure extends StorageError {}
+	
 	
 	/**
 	 * List of labels.
