@@ -20,3 +20,4 @@ public class Params {
 	public static byte[] RETRIEVE_OK={4};
 	public static byte[] RETRIEVE_FAIL={5};
 }
+
