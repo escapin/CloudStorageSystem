@@ -71,6 +71,7 @@ public class Storage {
 	 * The byte array "label" has to be converted in a String "toString()" method 
 	 * so that we can use the method "equals" 
 	 */
+	// FIXME: do we really need private fields with getters for a private class?
 	private class KeyStorage{
 		private int userID;
 		private String label;
@@ -98,6 +99,9 @@ public class Storage {
 			}
 			return false;
 		}
+
+		// FIXME: One must define method hashCode to make this class work correctly with HashMap!
+		// (if we go directly to an external database, we can skip this)
 	}
 }
 
