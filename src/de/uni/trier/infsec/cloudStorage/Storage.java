@@ -1,6 +1,13 @@
 package de.uni.trier.infsec.cloudStorage;
 
 import java.util.*;
+import java.io.File;
+
+import org.tmatesoft.sqljet.core.SqlJetException;
+import org.tmatesoft.sqljet.core.SqlJetTransactionMode;
+import org.tmatesoft.sqljet.core.table.ISqlJetCursor;
+import org.tmatesoft.sqljet.core.table.ISqlJetTable;
+import org.tmatesoft.sqljet.core.table.SqlJetDb;
 
 import de.uni.trier.infsec.utils.MessageTools;
 
