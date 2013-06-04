@@ -1,5 +1,6 @@
 package de.uni.trier.infsec.cloudStorage;
 
+import java.io.File;
 import java.util.Arrays;
 
 import de.uni.trier.infsec.environment.network.NetworkError;
@@ -11,7 +12,9 @@ public class Server{
 	private static PKIEnc.Decryptor server_decr = new PKIEnc.Decryptor(Params.SERVER_ID);
 	private static PKISig.Signer signer = new PKISig.Signer(Params.SERVER_ID);
 	
-	private static Storage msgStorage = new Storage();
+	private static String fileDB = "storageDB" + File.separator + "cloud_storage.db";
+	
+	private static StorageDB msgStorage = new StorageDB(fileDB);
 	
 	/**
 	 * Process every request coming from a client and reply with the proper response 

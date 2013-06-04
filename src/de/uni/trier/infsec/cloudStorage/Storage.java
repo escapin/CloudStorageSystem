@@ -12,7 +12,9 @@ import org.tmatesoft.sqljet.core.table.SqlJetDb;
 import de.uni.trier.infsec.utils.MessageTools;
 
 /**
+ * OLD CLASS: deprecated! 
  * Separate class to store the message on the server side.
+ * 
  * 
  * @author scapin
  *

@@ -6,7 +6,6 @@ import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
 import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
 import de.uni.trier.infsec.functionalities.symenc.SymEnc;
-import de.uni.trier.infsec.environment.network.NetworkClient;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.utils.*;
 
@@ -24,8 +23,10 @@ public class Client {
 
 	private int userID;
 	private LabelList lastCounter = new LabelList(); // for each label maintains the last counter
+	
+	private NetworkInterface net;
 
-	public Client(int userID, SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer) throws PKIError, NetworkError {
+	public Client(int userID, SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer, NetworkInterface net) throws PKIError, NetworkError {
 		this.symenc = symenc;
 		this.decryptor = decryptor;
 		this.signer = signer;
@@ -33,6 +34,7 @@ public class Client {
 		this.server_enc = PKIEnc.getEncryptor(Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
 		this.server_ver = PKISig.getVerifier(Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
 		this.userID = userID;
+		this.net=net;
 	}
 
 
@@ -63,7 +65,7 @@ public class Client {
 			// where signClient is the signature of ((STORE, (label, (counter, encMsg)))
 
 			// 5. send the message to the server
-			byte[] encryptedSignedResp = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT);
+			byte[] encryptedSignedResp = net.sendRequest(msgToSend);
 
 			/* HANDLE THE SERVER RESPONSE
 			 * Expected server's responses (encrypted with the client's public key):
@@ -131,7 +133,7 @@ public class Client {
 		// where signClient is the signature of (RETRIEVE, (label, counter))
 
 		// 5. send the message to the server
-		byte[] encryptedSignedResp = NetworkClient.sendRequest(msgToSend, Params.SERVER_NAME, Params.SERVER_PORT); 
+		byte[] encryptedSignedResp = net.sendRequest(msgToSend); 
 
 				
 		/* HANDLE THE SERVER RESPONSE

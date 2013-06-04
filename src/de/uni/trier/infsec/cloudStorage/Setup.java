@@ -31,7 +31,7 @@ public class Setup {
 		try {
 			PKIEnc.register(client_decryptor.getEncryptor(), Params.PKI_ENC_DOMAIN);
 			PKISig.register(client_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
-			client = new Client(HONEST_CLIENT_ID, client_symenc, client_decryptor, client_signer);
+			client = new Client(HONEST_CLIENT_ID, client_symenc, client_decryptor, client_signer, new NetworkReal());
 		} 
 		catch (PKIError | NetworkError e) { // registration failed or it was impossible to obtain the server public keys
 			return;
