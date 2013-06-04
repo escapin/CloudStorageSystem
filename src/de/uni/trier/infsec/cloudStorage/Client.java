@@ -2,11 +2,14 @@ package de.uni.trier.infsec.cloudStorage;
 
 import java.util.*;
 
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
+//import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig;
+//import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
+import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
+//import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
+import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.symenc.SymEnc;
-import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.*;
 
 public class Client {

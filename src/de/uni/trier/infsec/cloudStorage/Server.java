@@ -3,8 +3,8 @@ package de.uni.trier.infsec.cloudStorage;
 import java.io.File;
 import java.util.Arrays;
 
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.idealcor.*;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pki.real.*;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class Server{
