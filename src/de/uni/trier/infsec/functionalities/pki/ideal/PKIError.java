@@ -1,4 +1,4 @@
 package de.uni.trier.infsec.functionalities.pki.ideal;
 
-@SuppressWarnings("serial")
+//@SuppressWarnings("serial")
 public class PKIError extends Exception { }

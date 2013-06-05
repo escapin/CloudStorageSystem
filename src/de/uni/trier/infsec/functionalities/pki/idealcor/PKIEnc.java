@@ -1,7 +1,5 @@
 package de.uni.trier.infsec.functionalities.pki.idealcor;
 
-import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
 import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
@@ -62,11 +60,12 @@ public class PKIEnc {
 		}
 
 		public byte[] encrypt(byte[] message) {
-			return copyOf(CryptoLib.pke_encrypt(copyOf(message), copyOf(publicKey)));
+			return MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.copyOf(message),
+				MessageTools.copyOf(publicKey)));
 		}
 
 		public byte[] getPublicKey() {
-			return copyOf(publicKey);
+			return MessageTools.copyOf(publicKey);
 		}
 	}
 
@@ -89,10 +88,11 @@ public class PKIEnc {
 			byte[] randomCipher = null;
 			// keep asking the environment for the ciphertext, until a fresh one is given:
 			while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
-				randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
+				randomCipher = MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.getZeroMessage(message.length), 
+						MessageTools.copyOf(publicKey)));
 			}
-			log.add(copyOf(message), randomCipher);
-			return copyOf(randomCipher);
+			log.add(MessageTools.copyOf(message), randomCipher);
+			return MessageTools.copyOf(randomCipher);
 		}
 	}
 
@@ -105,8 +105,8 @@ public class PKIEnc {
 
 		public Decryptor(int id) {
 			KeyPair keypair = CryptoLib.pke_generateKeyPair();
-			this.privateKey = copyOf(keypair.privateKey);
-			this.publicKey = copyOf(keypair.publicKey);
+			this.privateKey = MessageTools.copyOf(keypair.privateKey);
+			this.publicKey = MessageTools.copyOf(keypair.publicKey);
 			this.id = id;
 			this.log = new EncryptionLog();
 		}
@@ -114,11 +114,11 @@ public class PKIEnc {
 		/** "Decrypts" a message by, first trying to find in in the log (and returning
 		 *   the related plaintext) and, only if this fails, by using real decryption. */
 		public byte[] decrypt(byte[] message) {
-			byte[] messageCopy = copyOf(message);
+			byte[] messageCopy = MessageTools.copyOf(message);
 			if (!log.containsCiphertext(messageCopy)) {
-				return copyOf( CryptoLib.pke_decrypt(copyOf(privateKey), messageCopy) );
+				return MessageTools.copyOf( CryptoLib.pke_decrypt(MessageTools.copyOf(privateKey), messageCopy) );
 			} else {
-				return copyOf( log.lookup(messageCopy) );
+				return MessageTools.copyOf( log.lookup(messageCopy) );
 			}
 		}
 

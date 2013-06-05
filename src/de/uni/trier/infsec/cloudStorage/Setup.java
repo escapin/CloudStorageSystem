@@ -33,7 +33,9 @@ public class Setup {
 			PKISig.register(client_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
 			client = new Client(HONEST_CLIENT_ID, client_symenc, client_decryptor, client_signer);
 		} 
-		catch (PKIError | NetworkError e) { // registration failed or it was impossible to obtain the server public keys
+		catch (PKIError e) {
+			return;
+		} catch (NetworkError e) { // registration failed or it was impossible to obtain the server public keys
 			return;
 		}
 

@@ -1,6 +1,5 @@
 package de.uni.trier.infsec.functionalities.pki.ideal;
 
-import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
@@ -59,7 +58,7 @@ public class PKISig {
 		}
 
 		public byte[] getVerifKey() {
-			return copyOf(verifKey);
+			return MessageTools.copyOf(verifKey);
 		}
 	}
 
@@ -77,22 +76,23 @@ public class PKISig {
 
 		public Signer(int id) {
 			KeyPair keypair = CryptoLib.generateSignatureKeyPair(); // note usage of the real cryto lib here
-			this.signKey = copyOf(keypair.privateKey);
-			this.verifKey = copyOf(keypair.publicKey);
+			this.signKey = MessageTools.copyOf(keypair.privateKey);
+			this.verifKey = MessageTools.copyOf(keypair.publicKey);
 			this.ID = id;
 			this.log = new Log();
 		}
 
 		public byte[] sign(byte[] message) {
-			byte[] signature = CryptoLib.sign(copyOf(message), copyOf(signKey)); // note usage of the real crypto lib here
+			byte[] signature = CryptoLib.sign(MessageTools.copyOf(message), MessageTools.copyOf(signKey)); // note usage of the real crypto lib here
 			// we make sure that the signing has not failed
 			if (signature == null) return null;
 			// and that the signature is correct
-			if( !CryptoLib.verify(copyOf(message), copyOf(signature), copyOf(verifKey)) )
+			if( !CryptoLib.verify(MessageTools.copyOf(message), MessageTools.copyOf(signature),
+					MessageTools.copyOf(verifKey)) )
 				return null;
 			// now we log the message (only!) as signed and return the signature
-			log.add(copyOf(message));
-			return copyOf(copyOf(signature));
+			log.add(MessageTools.copyOf(message));
+			return MessageTools.copyOf(MessageTools.copyOf(signature));
 		}
 
 		public Verifier getVerifier() {
