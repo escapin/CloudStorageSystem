@@ -51,7 +51,9 @@ public class Setup {
 				if (msg1.length != msg2.length) break;
 				byte[] msg = new byte[msg1.length];
 				for (int i=0; i<msg1.length; ++i) {
+					try {
 					msg[i] = (secret_bit ? msg1[i] : msg2[i]);
+					} catch(Exception e) {}
 				}
 				try {
 					client.store(msg, label);
