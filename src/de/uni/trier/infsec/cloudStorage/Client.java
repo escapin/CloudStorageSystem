@@ -8,7 +8,7 @@ import de.uni.trier.infsec.functionalities.pki.real.PKISig;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
 //import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.symenc.SymEnc;
+import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.*;
 
