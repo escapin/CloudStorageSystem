@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import de.uni.trier.infsec.cloudStorage.StorageDB;
 
+// TODO: convert it into a test case
 
 public class TestStorage {
 	public static void main(String[] args){
