@@ -90,25 +90,26 @@ public class PKIEnc {
 		byte[] key = PKI.getKey(id, pki_domain);
 		return new PKIEnc.Encryptor(id,key);
 	}
-	
+
+
 	/// Extended interface (not in the ideal functionality): serialization/deserialization of decryptors ///
 
-		public static byte[] decryptorToBytes(Decryptor decryptor) {
-			byte[] id = intToByteArray(decryptor.id);
-			byte[] priv = decryptor.privateKey;
-			byte[] publ = decryptor.publicKey;
+	public static byte[] decryptorToBytes(Decryptor decryptor) {
+		byte[] id = intToByteArray(decryptor.id);
+		byte[] priv = decryptor.privateKey;
+		byte[] publ = decryptor.publicKey;
 
-			byte[] out = concatenate(id, concatenate(priv, publ));
-			return out; 
-		}
+		byte[] out = concatenate(id, concatenate(priv, publ));
+		return out; 
+	}
 
-		public static Decryptor decryptorFromBytes(byte[] bytes) {
-			int id = byteArrayToInt(first(bytes));
-			byte[] rest = second(bytes);
-			byte[] priv = first(rest);
-			byte[] publ = second(rest);
+	public static Decryptor decryptorFromBytes(byte[] bytes) {
+		int id = byteArrayToInt(first(bytes));
+		byte[] rest = second(bytes);
+		byte[] priv = first(rest);
+		byte[] publ = second(rest);
 
-			Decryptor decryptor = new Decryptor(id, publ, priv);
-			return decryptor; 
-		}
+		Decryptor decryptor = new Decryptor(id, publ, priv);
+		return decryptor; 
+	}
 }
