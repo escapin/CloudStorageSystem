@@ -19,10 +19,6 @@ public class StorageDB {
 	
 	public StorageDB(String file_database){
 		this.file_database=file_database;
-		//if the file already exists we deletes it
-		File f = new File(file_database);
-		if(f.exists())
-			f.delete();
 		try {
 			// connect to a database. If database does not exist, 
 			// then it will be created and finally a database object will be returned

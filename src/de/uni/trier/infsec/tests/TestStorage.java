@@ -10,7 +10,11 @@ import de.uni.trier.infsec.cloudStorage.StorageDB;
 public class TestStorage {
 	public static void main(String[] args){
 		// String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
-		String fileDB = "storageDB" + File.separator + "cloud_storage.db";
+		String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
+		//if the database already exists we delete it
+		File f = new File(fileDB);
+		if(f.exists())
+			f.delete();
 		StorageDB storage = new StorageDB(fileDB);
 		
 		storage.insert(100, "label01".getBytes(), 1, "msgLabel01".getBytes(), "signLabel01".getBytes());

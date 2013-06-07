@@ -12,7 +12,7 @@ public class Server{
 	private static PKIEnc.Decryptor server_decr = new PKIEnc.Decryptor(Params.SERVER_ID);
 	private static PKISig.Signer signer = new PKISig.Signer(Params.SERVER_ID);
 	
-	private static String fileDB = "storageDB" + File.separator + "cloud_storage.db";
+	private static String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
 	
 	private static StorageDB msgStorage = new StorageDB(fileDB);
 	
