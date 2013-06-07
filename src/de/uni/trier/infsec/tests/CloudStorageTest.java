@@ -23,9 +23,13 @@ public class CloudStorageTest extends TestCase {
 	@Test
 	public void test() throws Exception{
 		PKI.useLocalMode();
+
+		// Register the server:
+		Server.init();
+
 		NetworkInterface network = new NetworkTest();
 		// CLIENT 01
-		int clientID01=1;
+		int clientID01=101;
 		SymEnc symenc01 = new SymEnc();
 		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor(clientID01);
 		PKISig.Signer signer01 = new PKISig.Signer(clientID01);

@@ -9,12 +9,19 @@ import de.uni.trier.infsec.utils.MessageTools;
 
 public class Server{
 	
-	private static PKIEnc.Decryptor server_decr = new PKIEnc.Decryptor(Params.SERVER_ID);
-	private static PKISig.Signer signer = new PKISig.Signer(Params.SERVER_ID);
+	private static PKIEnc.Decryptor server_decr;
+	private static PKISig.Signer signer;
+	private static String fileDB;
+	private static StorageDB msgStorage;
 	
-	private static String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
-	
-	private static StorageDB msgStorage = new StorageDB(fileDB);
+	public static void init() throws NetworkError, PKIError {
+		server_decr = new PKIEnc.Decryptor(Params.SERVER_ID);
+		PKIEnc.register(server_decr.getEncryptor(), Params.PKI_ENC_DOMAIN);
+		signer = new PKISig.Signer(Params.SERVER_ID);
+		PKISig.register(signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
+		msgStorage = new StorageDB(fileDB);
+	}
 	
 	/**
 	 * Process every request coming from a client and reply with the proper response 
