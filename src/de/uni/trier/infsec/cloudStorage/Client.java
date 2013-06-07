@@ -52,6 +52,7 @@ public class Client {
 		int counter = lastCounter.get(label) + 1; // note that if label has not been used, lastCounter.get(label) returns -1
 
 		for (int attempts=0; attempts<STORE_ATTEMPTS; ++attempts) {
+			//System.out.println(counter);
 			// Encoding the message that has to be signed: (STORE, (label, (counter, encMsg)))
 			byte[] counter_msg = MessageTools.concatenate(MessageTools.intToByteArray(counter), encrMsg);
 			byte[] label_counter_msg = MessageTools.concatenate(label, counter_msg);
@@ -85,6 +86,7 @@ public class Client {
 			// response is either STORE_OK or (STORE_FAIL, lastCounter)
 			
 			// analyze the response tag
+			//System.out.println(new String(response.tag));
 			if(Arrays.equals(response.tag, Params.STORE_OK)){  // message successfully stored 
 				// we can save the counter used to send the message
 				lastCounter.put(label, counter);
@@ -165,7 +167,6 @@ public class Client {
 			byte[] store_label_counter_msg = MessageTools.concatenate(Params.STORE, label_counter_msg);
 			if(!verifier.verify(signMsg, store_label_counter_msg))  // the server hasn't replied with the encrypted message we requested
 				throw new IncorrectReply();
-	
 			// everything is ok; decrypt the message and return it 
 			return symenc.decrypt(encrMsg);
 		}
@@ -214,7 +215,7 @@ public class Client {
 		if(!Arrays.equals(signatureClient, signRequest))
 			throw new MalformedMessage();
 		byte[] response = MessageTools.second(payload); // response should be of the form (tag, info), where info may be empty
-		return new ServerResponse( MessageTools.first(response), MessageTools.second(response)); 
+		return new ServerResponse(MessageTools.first(response), MessageTools.second(response)); 
 	}
 
 	@SuppressWarnings("serial")

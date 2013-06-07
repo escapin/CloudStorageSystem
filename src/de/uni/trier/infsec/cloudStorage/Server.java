@@ -11,7 +11,6 @@ public class Server{
 	
 	private static PKIEnc.Decryptor server_decr;
 	private static PKISig.Signer signer;
-	private static String fileDB;
 	private static StorageDB msgStorage;
 	
 	public static void init() throws NetworkError, PKIError {
@@ -19,8 +18,7 @@ public class Server{
 		PKIEnc.register(server_decr.getEncryptor(), Params.PKI_ENC_DOMAIN);
 		signer = new PKISig.Signer(Params.SERVER_ID);
 		PKISig.register(signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
-		fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
-		msgStorage = new StorageDB(fileDB);
+		msgStorage = new StorageDB(Params.STORAGE_DB);
 	}
 	
 	/**
@@ -81,7 +79,7 @@ public class Server{
 	
 	/**
 	 * Try to store the message and reply:
-	 * - STORE_OK:	the message has been stored correctly
+	 * - (STORE_OK, emptyMessage):	the message has been stored correctly
 	 * - (STORE_FAIL, lastCounter):	there is already a message stored with the same (userID, label) but with an higher counter 
 	 */
 	private static byte[] store(int userID, byte[] signClient, byte[] label_counter_encMsg) throws MalformedMessage{
@@ -101,14 +99,15 @@ public class Server{
 			return MessageTools.concatenate(Params.STORE_FAIL, MessageTools.intToByteArray(lastCounter));
 		// otherwise we can store the message
 		msgStorage.insert(userID, label, counter, encMsg, signClient);
-		return Params.STORE_OK;
+		byte[] emptyMessage = {};
+		return MessageTools.concatenate(Params.STORE_OK, emptyMessage);
 	}
 	
 	
 	/**
 	 * Try to retrieve the message indexed with (userID, label, counter) and reply:
 	 * - (RETRIEVE_OK, (encMsg, signEncrMsg)):	the message and the signature of it when it was sent to the server 
-	 * - RETREIVE_FAIL:	there isn't any message indexed with (userID, label, counter)
+	 * - (RETREIVE_FAIL, emptyMessage):	there isn't any message indexed with (userID, label, counter)
 	 */
 	private static byte[] retrieve(int userID, byte[] label_counter) throws MalformedMessage{
 		// Shape of the message to parse: (label, counter)
@@ -118,8 +117,10 @@ public class Server{
 			throw new MalformedMessage();
 		int counter = MessageTools.byteArrayToInt(counterB);
 		byte[] encMsg = msgStorage.getMessage(userID, label, counter);
-		if(encMsg==null) // the message isn't in the storage
-			return Params.RETRIEVE_FAIL;
+		if(encMsg==null){ // the message isn't in the storage
+			byte[] emptyMessage = {}; 
+			return MessageTools.concatenate(Params.RETRIEVE_FAIL, emptyMessage);
+		}
 		byte[] signEncMsg = msgStorage.getSignature(userID, label, counter);
 		byte[] msg_sign = MessageTools.concatenate(encMsg, signEncMsg);
 		return MessageTools.concatenate(Params.RETRIEVE_OK, msg_sign);

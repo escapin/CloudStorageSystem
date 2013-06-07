@@ -22,54 +22,72 @@ public class CloudStorageTest extends TestCase {
 
 	@Test
 	public void test() throws Exception{
+		
+		// delete the database where the message are stored
+		File f = new File(Params.STORAGE_DB);
+		if(f.exists())
+			f.delete();
+		
+		
 		PKI.useLocalMode();
-
 		// Register the server:
 		Server.init();
 
 		NetworkInterface network = new NetworkTest();
+		
 		// CLIENT 01
 		int clientID01=101;
 		SymEnc symenc01 = new SymEnc();
 		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor(clientID01);
 		PKISig.Signer signer01 = new PKISig.Signer(clientID01);
-		Client client01=null;
-		try {
-			// register the client to the PKIEnc domain
-			PKIEnc.register(decryptor01.getEncryptor(), Params.PKI_ENC_DOMAIN);
-			PKISig.register(signer01.getVerifier(), Params.PKI_DSIG_DOMAIN);
-			client01 = new Client(clientID01, symenc01, decryptor01, signer01, network);
-		} catch (Exception e) {
-			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-		}
+		 
+		// register the client to the PKIEnc domain
+		PKIEnc.register(decryptor01.getEncryptor(), Params.PKI_ENC_DOMAIN);
+		PKISig.register(signer01.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		Client client01 = new Client(clientID01, symenc01, decryptor01, signer01, network);
 		
-		//byte[] msg01="message01client01".getBytes("UTF-8");
-		//byte[] labelMsg01="labelMessage01client01".getBytes("UTF-8");
-		byte[] msg01={0x01};
-		byte[] labelMsg01={0x02};
-		byte[] retrieveMsg01=null;
-		try{
-			client01.store(msg01, labelMsg01);
-			//retrieveMsg01=client01.retreive(labelMsg01);
-		} catch (Exception e) {
-			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-		}
-		/*
-		assertTrue("Received data is not equal to sent data", Arrays.equals(msg01, retrieveMsg01));
-		//fail("Not yet implemented");
-		
-		 // CLIENT 02
-		int clientID02=2;
+		// CLIENT 02
+		int clientID02=102;
 		SymEnc symenc02 = new SymEnc();
 		PKIEnc.Decryptor decryptor02 = new PKIEnc.Decryptor(clientID02);
 		PKISig.Signer signer02 = new PKISig.Signer(clientID02);
-		Client client02=null;
-		try {
-			client02 = new Client(clientID02, symenc02, decryptor02, signer02, network);
-		} catch (Exception e) {
-			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-		}
-		 */
+				
+		// register the client to the PKIEnc domain
+		PKIEnc.register(decryptor02.getEncryptor(), Params.PKI_ENC_DOMAIN);
+		PKISig.register(signer02.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		Client client02 = new Client(clientID02, symenc02, decryptor02, signer02, network);
+		
+		
+		byte[] msg01="message01".getBytes();
+		byte[] label01="label01".getBytes();
+		byte[] msg02="message02".getBytes();
+		byte[] label02="label02".getBytes();
+		
+		
+		client01.store(msg01, label01);
+		client02.store(msg02, label02);
+		
+		byte[] retrieveMsg01=client01.retreive(label01);
+		byte[] retrieveMsg02=client02.retreive(label02);
+		
+		System.out.println("\"" + new String(msg01) + "\" equals to \"" + new String(retrieveMsg01) + "\"");
+		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg01, retrieveMsg01));
+		
+		System.out.println("\"" + new String(msg02) + "\" equals to \"" + new String(retrieveMsg02) + "\"");
+		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg02, retrieveMsg02));
+		
+		byte[] msg03="message03".getBytes();
+		
+		// store the msg03 under the same label of the msg01
+		client01.store(msg03, label01);
+		
+		// we expect to retrieve msg03 instead of msg01
+		byte[] retrieveMsg03=client01.retreive(label01);
+		
+		System.out.println("\"" + new String(msg03) + "\" equals to \"" + new String(retrieveMsg03) + "\"");
+		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg03, retrieveMsg03));
+		
+		
 	}
 
 	private class NetworkTest implements NetworkInterface {
