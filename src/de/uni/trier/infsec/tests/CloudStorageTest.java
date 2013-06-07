@@ -22,7 +22,6 @@ public class CloudStorageTest extends TestCase {
 
 	@Test
 	public void test() throws Exception{
-		setUp(); // delete the PKI database
 		PKI.useLocalMode();
 		NetworkInterface network = new NetworkTest();
 		// CLIENT 01

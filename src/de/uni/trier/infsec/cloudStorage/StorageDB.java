@@ -5,6 +5,7 @@ import java.io.File;
 
 import java.sql.*;
 
+import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class StorageDB {
@@ -19,23 +20,28 @@ public class StorageDB {
 	
 	public StorageDB(String file_database){
 		this.file_database=file_database;
+		boolean dbExist = (new File(file_database)).exists();
 		try {
 			// connect to a database. If database does not exist, 
 			// then it will be created and finally a database object will be returned
 			Class.forName("org.sqlite.JDBC");
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
-			// Creates a Statement object for sending SQL statements to the database
-			Statement stmt = db.createStatement();
-			// Creates 'msg_storage' table 
-			String sql = "CREATE TABLE " + TABLE_STORAGE +
+			
+			// only if the database didn't exist, create the table
+			if(!dbExist){
+				// Creates a Statement object for sending SQL statements to the database
+				Statement stmt = db.createStatement();
+				// Creates 'msg_storage' table 
+				String sql = "CREATE TABLE " + TABLE_STORAGE +
 					"(userID INTEGER NOT NULL, " +
 					"label TEXT NOT NULL, " +
 					"counter INTEGER NOT NULL, " +
 					"message TEXT, " +
 					"signature TEXT,  " +
 					"PRIMARY KEY (userID, label, counter));";
-			stmt.executeUpdate(sql);
-			stmt.close();
+				stmt.executeUpdate(sql);
+				stmt.close();
+			}
 		    db.close();
 	    } catch ( Exception e ) {
 	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
