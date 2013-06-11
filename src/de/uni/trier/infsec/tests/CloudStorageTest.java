@@ -6,6 +6,7 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 import org.junit.Test;
 import de.uni.trier.infsec.cloudStorage.*;
+import de.uni.trier.infsec.cloudStorage.Client.CounterOutOfDate;
 import de.uni.trier.infsec.cloudStorage.Server.MalformedMessage;
 import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
@@ -14,7 +15,7 @@ import de.uni.trier.infsec.functionalities.pki.real.PKISig;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
 import de.uni.trier.infsec.lib.network.NetworkError;
-import de.uni.trier.infsec.utils.Utilities;
+//import de.uni.trier.infsec.utils.Utilities;
 
 
 
@@ -28,7 +29,6 @@ public class CloudStorageTest extends TestCase {
 		if(f.exists())
 			f.delete();
 		
-		
 		PKI.useLocalMode();
 		// Register the server:
 		Server.init();
@@ -36,24 +36,24 @@ public class CloudStorageTest extends TestCase {
 		NetworkInterface network = new NetworkTest();
 		
 		// CLIENT 01
-		int clientID01=101;
+		int userID01=101;
 		SymEnc symenc01 = new SymEnc();
-		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor(clientID01);
-		PKISig.Signer signer01 = new PKISig.Signer(clientID01);
+		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor(userID01);
+		PKISig.Signer signer01 = new PKISig.Signer(userID01);
 		// register the client to the PKIEnc domain
 		PKIEnc.register(decryptor01.getEncryptor(), Params.PKI_ENC_DOMAIN);
 		PKISig.register(signer01.getVerifier(), Params.PKI_DSIG_DOMAIN);
-		Client client01 = new Client(clientID01, symenc01, decryptor01, signer01, network);
+		Client client01 = new Client(userID01, symenc01, decryptor01, signer01, network);
 		
 		// CLIENT 02
-		int clientID02=102;
+		int userID02=102;
 		SymEnc symenc02 = new SymEnc();
-		PKIEnc.Decryptor decryptor02 = new PKIEnc.Decryptor(clientID02);
-		PKISig.Signer signer02 = new PKISig.Signer(clientID02);
+		PKIEnc.Decryptor decryptor02 = new PKIEnc.Decryptor(userID02);
+		PKISig.Signer signer02 = new PKISig.Signer(userID02);
 		// register the client to the PKIEnc domain
 		PKIEnc.register(decryptor02.getEncryptor(), Params.PKI_ENC_DOMAIN);
 		PKISig.register(signer02.getVerifier(), Params.PKI_DSIG_DOMAIN);
-		Client client02 = new Client(clientID02, symenc02, decryptor02, signer02, network);
+		Client client02 = new Client(userID02, symenc02, decryptor02, signer02, network);
 		
 		
 		byte[] msg01="message01".getBytes();
@@ -63,10 +63,11 @@ public class CloudStorageTest extends TestCase {
 		
 		
 		client01.store(msg01, label01);
+		
 		client02.store(msg02, label02);
 		
-		byte[] retrieveMsg01=client01.retreive(label01);
-		byte[] retrieveMsg02=client02.retreive(label02);
+		byte[] retrieveMsg01=client01.retrieve(label01);
+		byte[] retrieveMsg02=client02.retrieve(label02);
 		
 		System.out.println("\"" + new String(msg01) + "\" equals to \"" + new String(retrieveMsg01) + "\"");
 		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg01, retrieveMsg01));
@@ -80,41 +81,66 @@ public class CloudStorageTest extends TestCase {
 		client01.store(msg03, label01);
 		
 		// we expect to retrieve msg03 instead of msg01
-		byte[] retrieveMsg03=client01.retreive(label01);
+		byte[] retrieveMsg03=client01.retrieve(label01);
 		
 		System.out.println("\"" + new String(msg03) + "\" equals to \"" + new String(retrieveMsg03) + "\"");
 		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg03, retrieveMsg03));
 		
 		
 		// CLIENT 03
-		int clientID03=103;
+		int userID03=103;
 		SymEnc symenc03 = new SymEnc();
-		PKIEnc.Decryptor decryptor03 = new PKIEnc.Decryptor(clientID03);
-		PKISig.Signer signer03 = new PKISig.Signer(clientID03);
+		PKIEnc.Decryptor decryptor03 = new PKIEnc.Decryptor(userID03);
+		PKISig.Signer signer03 = new PKISig.Signer(userID03);
 		// register the client to the PKIEnc domain
 		PKIEnc.register(decryptor03.getEncryptor(), Params.PKI_ENC_DOMAIN);
 		PKISig.register(signer03.getVerifier(), Params.PKI_DSIG_DOMAIN);
-		Client client03 = new Client(clientID03, symenc03, decryptor03, signer03, network);
+		Client client03 = new Client(userID03, symenc03, decryptor03, signer03, network);
 		
 		// 
 		client03.store(msg03, label01);
-		byte[] retrieveMsg = client03.retreive(label01);
+		byte[] retrieveMsg = client03.retrieve(label01);
 		System.out.println("\"" + new String(msg03) + "\" equals to \"" + new String(retrieveMsg) + "\"");
 		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg03, retrieveMsg));
 	
 		
-		retrieveMsg = client02.retreive(label01);
+		retrieveMsg = client02.retrieve(label01);
 		assertTrue("Retrieved a message never stored", retrieveMsg==null);
+		
+		
+		// test the CounterSynchronizationError() exception
+		Client client04= new Client(userID03, symenc03, decryptor03, signer03, network);
+		// client03 and client04 belong to the same user!
+		byte[] msg04 = "message03".getBytes();
+		try{
+			client04.store(msg04, label01);
+		} catch (CounterOutOfDate e){
+			System.out.println("Houston, we had had a problem: the counter is out of date!");
+			// if it happens, just do it again! 
+			client04.store(msg04, label01);
+		}
+		// client03 should retrieve exactly msg04
+		try{
+			retrieveMsg = client03.retrieve(label01);
+		} catch (CounterOutOfDate e){
+			System.out.println("Houston, we had had a problem: the counter is out of date!");
+			// if it happens, just do it again! 
+			retrieveMsg = client03.retrieve(label01);
+		}
+		System.out.println("\"" + new String(msg04) + "\" equals to \"" + new String(retrieveMsg) + "\"");
+		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg04, retrieveMsg));
+		
+		
 	}
 
 	private class NetworkTest implements NetworkInterface {
-		public byte[] sendRequest(byte[] msg) {
-			try {
-				return Server.processRequest(msg);
-			} catch (MalformedMessage | NetworkError | PKIError e) {
-				System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-			    return null;
-			}
+		public byte[] sendRequest(byte[] msg) throws NetworkError{
+				try {
+					return Server.processRequest(msg);
+				} catch (MalformedMessage | PKIError e) {
+					e.printStackTrace();
+				}
+				return null;
 		}
 	}
 	
