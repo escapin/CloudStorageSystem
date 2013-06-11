@@ -136,9 +136,8 @@ public class Server{
 	private static byte[] getLastCounter(int userID, byte[] label_nonce) throws MalformedMessage{
 		byte[] label = MessageTools.first(label_nonce);
 		byte[] nonce = MessageTools.second(label_nonce);
-		if(label.length==0 || nonce.length!=4)
+		if(label.length==0 || nonce.length==0)
 			throw new MalformedMessage();
-		// FIXME: the server has to check whether the nonce is fresh or not???
 		int lastCounter=msgStorage.getLastCounter(userID, label);
 		// if there is no counter associated with these (userID, label), it returns -1
 		byte[] lastCounter_nonce=MessageTools.concatenate(MessageTools.intToByteArray(lastCounter), nonce);
