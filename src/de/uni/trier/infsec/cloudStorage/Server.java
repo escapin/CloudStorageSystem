@@ -56,6 +56,8 @@ public class Server{
 			payloadResp = store(userID, signClient, MessageTools.second(payload));
 		else if(Arrays.equals(tag, Params.RETRIEVE))
 			payloadResp =  retrieve(userID, MessageTools.second(payload));
+		else if(Arrays.equals(tag, Params.GET_COUNTER))
+			payloadResp = getLastCounter(userID, MessageTools.second(payload));
 		else
 			throw new MalformedMessage();
 		
@@ -124,6 +126,23 @@ public class Server{
 		byte[] signEncMsg = msgStorage.getSignature(userID, label, counter);
 		byte[] msg_sign = MessageTools.concatenate(encMsg, signEncMsg);
 		return MessageTools.concatenate(Params.RETRIEVE_OK, msg_sign);
+	}
+	
+	/**
+	 * Provide the last counter associated to an (userID, label) and reply:
+	 * (LAST_COUNTER, (lastCounter, nonce)): the highest counter associated with the (userID, label) 	 
+	 * if there is no counter associated with these (userID, label), it returns -1
+	 */
+	private static byte[] getLastCounter(int userID, byte[] label_nonce) throws MalformedMessage{
+		byte[] label = MessageTools.first(label_nonce);
+		byte[] nonce = MessageTools.second(label_nonce);
+		if(label.length==0 || nonce.length!=4)
+			throw new MalformedMessage();
+		// FIXME: the server has to check whether the nonce is fresh or not???
+		int lastCounter=msgStorage.getLastCounter(userID, label);
+		// if there is no counter associated with these (userID, label), it returns -1
+		byte[] lastCounter_nonce=MessageTools.concatenate(MessageTools.intToByteArray(lastCounter), nonce);
+		return MessageTools.concatenate(Params.LAST_COUNTER, lastCounter_nonce);
 	}
 	
 	/**

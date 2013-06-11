@@ -18,10 +18,12 @@ public class Params {
 	public static byte[] STORE="STORE".getBytes();
 	public static byte[] STORE_OK="STORE_OK".getBytes();
 	public static byte[] STORE_FAIL="STORE_FAIL".getBytes();
+	public static byte[] GET_COUNTER="GET_COUNTER".getBytes();
 
 	// Response tags
 	public static byte[] RETRIEVE="RETRIEVE".getBytes();
 	public static byte[] RETRIEVE_OK="RETRIEVE_OK".getBytes();
 	public static byte[] RETRIEVE_FAIL="RETRIEVE_FAIL".getBytes();
+	public static byte[] LAST_COUNTER="LAST_COUNTER".getBytes();
 }
 
