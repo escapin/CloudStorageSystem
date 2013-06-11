@@ -1,6 +1,5 @@
 package de.uni.trier.infsec.cloudStorage;
 
-import java.io.File;
 import java.util.Arrays;
 
 import de.uni.trier.infsec.lib.network.NetworkError;

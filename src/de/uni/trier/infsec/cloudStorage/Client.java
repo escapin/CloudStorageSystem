@@ -115,7 +115,7 @@ public class Client {
 	 * @param label the label related to the message to be retrieved
 	 * @return the message in the server related to the label if it exists, null otherwise
 	 */
-	public byte[] retreive(byte[] label) throws NetworkError, StorageError {
+	public byte[] retrieve(byte[] label) throws NetworkError, StorageError {
 		
 		int counter = getLastCounter(label);
 		if(counter<0) // if counter<0 now we are sure that also the server doesn't have anything under this label
@@ -190,12 +190,12 @@ public class Client {
 			throw new CounterOutOfDate();
 		} 
 		
-		// otherwise the two counters are synchronized!
+		// otherwise the two counters are synchronized
 		return ourCounter;
 	}
 	
 	/**
-	 * Contact the server in order to retrieve the highest counter related to (clientID, label)
+	 * Retrieve from the server the highest counter related to (clientID, label)
 	 * If there isn't any counter related to this pair, return -1  
 	 * 
 	 */
@@ -300,7 +300,6 @@ public class Client {
 	 * Before throwing this exception we should update our counter to the server one.
 	 */
 	@SuppressWarnings("serial")
-	// FIXME: find a better name for this exception
 	public class CounterOutOfDate extends StorageError{}
 	
 	
