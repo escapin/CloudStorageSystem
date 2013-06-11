@@ -40,7 +40,6 @@ public class CloudStorageTest extends TestCase {
 		SymEnc symenc01 = new SymEnc();
 		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor(clientID01);
 		PKISig.Signer signer01 = new PKISig.Signer(clientID01);
-		 
 		// register the client to the PKIEnc domain
 		PKIEnc.register(decryptor01.getEncryptor(), Params.PKI_ENC_DOMAIN);
 		PKISig.register(signer01.getVerifier(), Params.PKI_DSIG_DOMAIN);
@@ -51,7 +50,6 @@ public class CloudStorageTest extends TestCase {
 		SymEnc symenc02 = new SymEnc();
 		PKIEnc.Decryptor decryptor02 = new PKIEnc.Decryptor(clientID02);
 		PKISig.Signer signer02 = new PKISig.Signer(clientID02);
-				
 		// register the client to the PKIEnc domain
 		PKIEnc.register(decryptor02.getEncryptor(), Params.PKI_ENC_DOMAIN);
 		PKISig.register(signer02.getVerifier(), Params.PKI_DSIG_DOMAIN);
@@ -88,6 +86,25 @@ public class CloudStorageTest extends TestCase {
 		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg03, retrieveMsg03));
 		
 		
+		// CLIENT 03
+		int clientID03=103;
+		SymEnc symenc03 = new SymEnc();
+		PKIEnc.Decryptor decryptor03 = new PKIEnc.Decryptor(clientID03);
+		PKISig.Signer signer03 = new PKISig.Signer(clientID03);
+		// register the client to the PKIEnc domain
+		PKIEnc.register(decryptor03.getEncryptor(), Params.PKI_ENC_DOMAIN);
+		PKISig.register(signer03.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		Client client03 = new Client(clientID03, symenc03, decryptor03, signer03, network);
+		
+		// 
+		client03.store(msg03, label01);
+		byte[] retrieveMsg = client03.retreive(label01);
+		System.out.println("\"" + new String(msg03) + "\" equals to \"" + new String(retrieveMsg) + "\"");
+		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg03, retrieveMsg));
+	
+		
+		retrieveMsg = client02.retreive(label01);
+		assertTrue("Retrieved a message never stored", retrieveMsg==null);
 	}
 
 	private class NetworkTest implements NetworkInterface {
