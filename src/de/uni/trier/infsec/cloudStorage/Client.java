@@ -14,10 +14,7 @@ import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.*;
 
 public class Client {
-
-	//private static int STORE_ATTEMPTS=3;
-	// how many times the client attempts to send a message to the server with the proper count 
-
+	
 	private SymEnc symenc;
 	private PKIEnc.Decryptor decryptor;
 	private PKISig.Signer signer;
@@ -28,11 +25,8 @@ public class Client {
 	private int userID;
 	private LabelList lastCounter;
 	private NonceGen nonceGen;
-	
-	
+
 	private NetworkInterface net;
-	
-	
 
 	public Client(int userID, SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer, NetworkInterface net) throws PKIError, NetworkError {
 		this.symenc = symenc;
@@ -59,7 +53,6 @@ public class Client {
 		// encrypt the message with the symmetric key (the secret key of the client) 
 		byte[] encrMsg = symenc.encrypt(msg);
 		
-		//System.out.println(counter);
 		// Encoding the message that has to be signed: (STORE, (label, (counter, encMsg)))
 		byte[] counter_msg = MessageTools.concatenate(MessageTools.intToByteArray(counter), encrMsg);
 		byte[] label_counter_msg = MessageTools.concatenate(label, counter_msg);
@@ -79,7 +72,6 @@ public class Client {
 		// response.info is either (STORE_OK, {}) or (STORE_FAIL, lastCounter)
 			
 		// analyze the response tag
-		//System.out.println(new String(response.tag));
 		if(Arrays.equals(response.tag, Params.STORE_OK)){  // message successfully stored 
 			// we can save the counter used to send the message
 			lastCounter.put(label, counter);
@@ -98,7 +90,7 @@ public class Client {
 				lastCounter.put(label, serverLastCounter);
 				throw new CounterOutOfDate();
 			}
-			// counter = serverCounter+1;
+			// FIXME: what if serverLastConter==counter ?
 		}
 		else
 			throw new IncorrectReply();
@@ -123,6 +115,9 @@ public class Client {
 
 		// create the message to send
 		byte[] label_counter = MessageTools.concatenate(label, MessageTools.intToByteArray(counter));
+		// FIXME: I think that this method should never throw 'CounterOutOfDate' exception. 
+		// It should simply use the counter as given by the server (and, before that, only check that
+		// it is not smaller than what we have).
 		byte[] retrieve_label_counter = MessageTools.concatenate(Params.RETRIEVE, label_counter);
 
 		/* HANDLE THE SERVER RESPONSE
