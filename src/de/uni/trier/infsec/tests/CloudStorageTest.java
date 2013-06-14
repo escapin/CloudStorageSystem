@@ -114,16 +114,14 @@ public class CloudStorageTest extends TestCase {
 		} catch (CounterOutOfDate e){
 			System.out.println("Houston, we had had a problem: the counter is out of date!");
 			// if it happens, just do it again! 
-			client04.store(msg04, label01); // FIXME: and now we do not try to catch an exception? why?
+			client04.store(msg04, label01); 
+			// FIXME: and now we do not try to catch an exception? why?
+			// because before throwing a CounterOutOfDate exception we update the counter, so in this case, where 
+			// there isn't any concurrency, we are sure that another CounterOutOfDate exception can't happen again.  
 		}
 		// client03 should retrieve exactly msg04
-		try{
-			retrieveMsg = client03.retrieve(label01);
-		} catch (CounterOutOfDate e){
-			System.out.println("Houston, we had had a problem: the counter is out of date!");
-			// if it happens, just do it again! 
-			retrieveMsg = client03.retrieve(label01); // FIXME: again: why this is not within some 'try' ?
-		}
+		retrieveMsg = client03.retrieve(label01);
+		
 		System.out.println("\"" + new String(msg04) + "\" equals to \"" + new String(retrieveMsg) + "\"");
 		assertTrue("Data retrieved not equal to data stored", Arrays.equals(msg04, retrieveMsg));
 	}
