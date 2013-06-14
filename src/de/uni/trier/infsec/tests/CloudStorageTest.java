@@ -116,7 +116,7 @@ public class CloudStorageTest extends TestCase {
 			// if it happens, just do it again! 
 			client04.store(msg04, label01); 
 			// FIXME: and now we do not try to catch an exception? why?
-			// because before throwing a CounterOutOfDate exception we update the counter, so in this case, where 
+			// because before throwing a CounterOutOfDate exception we update the counter. Therefore, since 
 			// there isn't any concurrency, we are sure that another CounterOutOfDate exception can't happen again.  
 		}
 		// client03 should retrieve exactly msg04
