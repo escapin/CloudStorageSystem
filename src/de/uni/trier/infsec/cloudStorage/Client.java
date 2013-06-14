@@ -48,7 +48,18 @@ public class Client {
 	 */
 	public void store(byte[] msg, byte[] label) throws NetworkError, StorageError {
 		
-		int counter =  getLastCounter(label)+1;
+		int serverLastCounter = getServerLastCounter(label);
+		// pick the last the counter we stored
+		int ourCounter = lastCounter.get(label); // note that if 'label' has not been used yet, lastCounter.get(label) returns -1
+		
+		if(serverLastCounter<ourCounter) // the server is misbehaving (his counter is expected to be higher)
+			throw new IncorrectReply();
+		else if(serverLastCounter>ourCounter){ // we aren't up to date with the current counter stored in the server
+			lastCounter.put(label, serverLastCounter);
+			throw new CounterOutOfDate();
+		}
+		// otherwise they are the same!
+		int counter = ourCounter+1;
 		
 		// encrypt the message with the symmetric key (the secret key of the client) 
 		byte[] encrMsg = symenc.encrypt(msg);
@@ -82,15 +93,13 @@ public class Client {
 			byte[] serverCounter = response.info;
 			if(serverCounter.length!=4) // since lastCounter is supposed to be a integer, its length must be 4 bytes
 				throw new IncorrectReply();
-			int serverLastCounter = MessageTools.byteArrayToInt(serverCounter); 
-			// FIXME: we should behave as in the getLastCounter method, shouldn't we?
-			if (serverLastCounter<counter) // the server is misbehaving (his counter is expected to be higher)
+			serverLastCounter = MessageTools.byteArrayToInt(serverCounter); 
+			if (serverLastCounter<=counter) // the server is misbehaving (his counter is expected to be higher)
 				throw new IncorrectReply();
 			else if (serverLastCounter>counter){ // we aren't up to date with the current counter stored in the server
 				lastCounter.put(label, serverLastCounter);
 				throw new CounterOutOfDate();
 			}
-			// FIXME: what if serverLastConter==counter ?
 		}
 		else
 			throw new IncorrectReply();
@@ -109,15 +118,20 @@ public class Client {
 	 */
 	public byte[] retrieve(byte[] label) throws NetworkError, StorageError {
 		
-		int counter = getLastCounter(label);
-		if(counter<0) // if counter<0 now we are sure that also the server doesn't have anything under this label
+		int counter = getServerLastCounter(label);
+		
+		// pick the last the counter we stored
+		int ourCounter = lastCounter.get(label); // note that if 'label' has not been used yet, lastCounter.get(label) returns -1
+		
+		if(counter<ourCounter) // the server is misbehaving (his counter is expected to be higher)
+			throw new IncorrectReply();
+		
+		if(counter<0) // if counter<0 now we are sure that the server doesn't have anything under this label
 			return null;
 
 		// create the message to send
 		byte[] label_counter = MessageTools.concatenate(label, MessageTools.intToByteArray(counter));
-		// FIXME: I think that this method should never throw 'CounterOutOfDate' exception. 
-		// It should simply use the counter as given by the server (and, before that, only check that
-		// it is not smaller than what we have).
+		
 		byte[] retrieve_label_counter = MessageTools.concatenate(Params.RETRIEVE, label_counter);
 
 		/* HANDLE THE SERVER RESPONSE
@@ -168,28 +182,6 @@ public class Client {
 	}
 	
 	/**
-	 * Retrieve the last counter from the server and compare it with our counter.
-	 * If the two counters aren't the same, throw an exception.
-	 * Otherwise return the last counter used to store something on the server.
-	 * 
-	 */
-	private int getLastCounter(byte[] label) throws NetworkError, StorageError{
-		int serverLastCounter = getServerLastCounter(label);
-		// pick the last the counter we stored
-		int ourCounter = lastCounter.get(label); // note that if 'label' has not been used yet, lastCounter.get(label) returns -1
-		
-		if(serverLastCounter<ourCounter) // the server is misbehaving (his counter is expected to be higher)
-			throw new IncorrectReply();
-		else if(serverLastCounter>ourCounter){ // we aren't up to date with the current counter stored in the server
-			lastCounter.put(label, serverLastCounter);
-			throw new CounterOutOfDate();
-		} 
-		
-		// otherwise the two counters are synchronized
-		return ourCounter;
-	}
-	
-	/**
 	 * Retrieve from the server the highest counter related to (clientID, label)
 	 * If there isn't any counter related to this pair, return -1  
 	 * 
@@ -234,7 +226,6 @@ public class Client {
 		byte[] encryptedSignedResp = net.sendRequest(msgToSend);
 		// Decrypt the validate the message in order to make sure that it is a response to the client's request.
 		return decryptValidateResp(encryptedSignedResp, signClient);
-		// TODO: We could also put the code of decryptValidateResp() here
 	}
 	
 	/**
