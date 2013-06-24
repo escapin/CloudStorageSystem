@@ -4,19 +4,27 @@ import java.util.Arrays;
 
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.functionalities.pki.real.*;
+import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Decryptor;
+import de.uni.trier.infsec.functionalities.pki.real.PKISig.Signer;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class Server{
 	
 	private static PKIEnc.Decryptor server_decr;
-	private static PKISig.Signer signer;
+	private static PKISig.Signer server_sign;
 	private static StorageDB msgStorage;
 	
 	public static void init() throws NetworkError, PKIError {
 		server_decr = new PKIEnc.Decryptor(Params.SERVER_ID);
 		PKIEnc.register(server_decr.getEncryptor(), Params.PKI_ENC_DOMAIN);
-		signer = new PKISig.Signer(Params.SERVER_ID);
-		PKISig.register(signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		server_sign = new PKISig.Signer(Params.SERVER_ID);
+		PKISig.register(server_sign.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		msgStorage = new StorageDB(Params.STORAGE_DB);
+	}
+	
+	public static void init(Decryptor decr, Signer sign) {
+		server_decr=decr;
+		server_sign=sign;
 		msgStorage = new StorageDB(Params.STORAGE_DB);
 	}
 	
@@ -69,7 +77,7 @@ public class Server{
 		// add the signClient token in front of the payloadResp
 		byte[] signClient_payloadResp = MessageTools.concatenate(signClient, payloadResp);
 		// sign the message with the server private key
-		byte[] signServer = signer.sign(signClient_payloadResp);
+		byte[] signServer = server_sign.sign(signClient_payloadResp);
 		byte[] msgSigned = MessageTools.concatenate(signClient_payloadResp, signServer);
 		
 		// encrypt the message for the client and return it
@@ -149,4 +157,6 @@ public class Server{
 	 */
 	@SuppressWarnings("serial")
 	public static class MalformedMessage extends Exception {}
+
+	
 }
