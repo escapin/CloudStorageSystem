@@ -2,8 +2,10 @@ package de.uni.trier.infsec.cloudStorage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
 import de.uni.trier.infsec.functionalities.pki.real.PKISig;
 import de.uni.trier.infsec.lib.network.NetworkError;
@@ -17,6 +19,8 @@ public class ServerApp {
 	
 	public static void main(String[] args) throws Exception{		
 		System.setProperty("remotemode", Boolean.toString(true));
+		PKI.useRemoteMode();
+		
 		ServerApp.setupServer();
 		ServerApp.run();
 	}
@@ -25,8 +29,12 @@ public class ServerApp {
 		byte[] serialized=null;
 		try {
 			serialized = readFromFile(Params.PATH_SERVER);
+		} catch (FileNotFoundException e){
+			System.out.println("Server not registered yet!\nType \'ServerRegisterApp' to register it.");
+			System.exit(0);
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
 		byte[] decryptor_signer = MessageTools.second(serialized);
 		server_decr = PKIEnc.decryptorFromBytes(MessageTools.first(decryptor_signer));
@@ -37,7 +45,8 @@ public class ServerApp {
 	private static void run() throws Exception{
 		System.out.println("Cloud Storage server is running...");
 		// Busy waiting - not a nice solution at all, but should be ok for now.
-		do{
+		NetworkServer.listenForRequests(Params.SERVER_PORT);
+		while(true){
 			byte[] request = NetworkServer.nextRequest(Params.SERVER_PORT);
 			if (request != null) {
 				byte[] response = Server.processRequest(request);
@@ -45,7 +54,7 @@ public class ServerApp {
 			} else {				
 				Thread.sleep(500);
 			}
-		} while(true);
+		}
 	}
 		
 	private static byte[] readFromFile(String path) throws IOException {

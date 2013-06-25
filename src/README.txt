@@ -1,58 +1,39 @@
 How-To run the StorageSystem process:
 
- 1. Run class de.uni.trier.infsec.functionalities.pki.real.PKIServer
+ 1. Run class de.uni.trier.infsec.functionalities.pki.real.PKIServerApp
 
     This starts the public key environment which is needed for
     registration and lookup of public and verification keys.  The
-    PKIServer stores the registered keys at %TEMP%/evoting_server.db -
+    PKIServer stores the registered keys at %TEMP%/CloudStorage/PKI_server.db -
     if you want to delete registered keys, you will have to delete this
     file.
 
- 2. Run class de.uni.trier.infsec.protocols.smt_voting.ServerRegisterStandalone
+ 2. Run class de.uni.trier.infsec.cloudStorage.ServerRegisterApp
 
-    This will run the servers registration process. Server will
+    This will run the server registration process. Server will
     register its keys at the PKI environment and store the serialized
-    keys to folder %TEMP%/smtvote
+    keys to folder %TEMP%/CloudStorage/server.info
 
- 3. Run class de.uni.trier.infsec.protocols.smt_voting.ServerStandalone
+ 3. Run class de.uni.trier.infsec.cloudStorage.ServerApp
 
-    The server will read the stored credentials and start listening for votes
+    The server will process the client requests (store, retrieve or provide last counter).
 
- 4. Run class de.uni.trier.infsec.protocols.smt_voting.BulletinBoardRegisterStandalone
+ 4. Run class de.uni.trier.infsec.cloudStorage.UserRegisterApp
+	with parameter <user_id [int]>
 
-    This will run the bulletin boards registration process. It will
-    register it�s keys at the PKI environment and store the serialized
-    keys to folder %TEMP%/smtvote
+    This will run registration process for the user with that user_id. It will
+    register its keys at the PKI environment and store the serialized
+    keys to folder %TEMP%/CluodStorag/user$(user_id).info
 
- 5. Run class de.uni.trier.infsec.protocols.smt_voting.BulletinBoardStandalone
+ 5a. Run class de.uni.trier.infsec.cloudStorage.ClientStoreApp
+	with paramters <user_id [int]> <label [String]> <msg [String]>
+    
+    To allow an user to store a message on the server under a specific label.
 
-    This will run the bulletin board. It will keep listening for
-    messages from the server and for requests for its content
-
-6.1. In order to submit a vote, you first have to register the voter
-    by running class de.uni.trier.infsec.protocols.smt_voting.VoterRegisterStandalone
-    with parameter <voter-id> which is expected as number in range 0 to 49
-
-    After registration is finished, the generated keys get stored to
-    folder %TEMP%/smtvote
-
-6.2. For sending the vote to the server, the voter has to be
-    registered (6.1) and the credential is expected to be stored in the
-    folder %TEMP%/smtvote
-
-    To vote, run class
-    de.uni.trier.infsec.protocols.smt_voting.VoterVoteStandalone with
-    parameters <vote> <voter-id>
-
-    Here the vote is expected as a two-digit HEX string 00 or 01, the
-    ID is expected as number in range 0 to 49
-
-    After all votes have been cast, the server automatically posts
-    it�s content and the result to the bulletin board and terminates.
-
- 7. By running class de.uni.trier.infsec.protocols.smt_voting.BulletinBoardRequestTool, 
-    the bulletin board will send its content and the request tool will
-    print this content as hex to the shell.
+5b. Run class de.uni.trier.infsec.cloudStorage.ClientRetrieveApp
+	with paramters <user_id [int]> <label [String]>
+    
+    To allow an user to retrieve the message stored on the server under the specific label.
 
 
 
@@ -61,15 +42,15 @@ EXAMPLE:
 
 Run following commands from bin-folder of the compiled project:
 
-1. java -cp ".:../lib/*" de.uni.trier.infsec.functionalities.pki.real.PKIServer
-2. java -cp ".:../lib/*" de.uni.trier.infsec.protocols.smt_voting.ServerRegisterStandalone
-3. java -cp ".:../lib/*" de.uni.trier.infsec.protocols.smt_voting.ServerStandalone
-4. java -cp ".:../lib/*" de.uni.trier.infsec.protocols.smt_voting.BulletinBoardRegisterStandalone
-5. java -cp ".:../lib/*" de.uni.trier.infsec.protocols.smt_voting.BulletinBoardStandalone
+1. java -cp ".:../lib/*" de.uni.trier.infsec.functionalities.pki.real.PKIServerApp
 
-6.1. java -cp ".:../lib/*" de.uni.trier.infsec.protocols.smt_voting.VoterRegisterStandalone 0
-6.2. java -cp ".:../lib/*" de.uni.trier.infsec.protocols.smt_voting.VoterVoteStandalone 01 0
+2. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ServerRegisterApp
+3. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ServerApp
 
-7. java -cp ".:../lib/*" de.uni.trier.infsec.protocols.smt_voting.BulletinBoardRequestTool
+4. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.UserRegisterApp 101
 
-In order to delete the PKIServers persistent key database, delete the file %TEMP%/evoting_server.db
+5.1. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientStoreApp 101 pwd casdasfasfafaasfsa
+5.2.  java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientRetrieveApp 101 pwd
+
+
+In order to delete the files created, delete the directory %TEMP%/CloudStorage

@@ -108,6 +108,7 @@ public class Server{
 			return MessageTools.concatenate(Params.STORE_FAIL, MessageTools.intToByteArray(lastCounter));
 		// otherwise we can store the message
 		msgStorage.insert(userID, label, counter, encMsg, signClient);
+		echo("[User " + userID + "]  " + "Message stored under the label '" + new String(label) + "'");
 		byte[] emptyMessage = {};
 		return MessageTools.concatenate(Params.STORE_OK, emptyMessage);
 	}
@@ -132,6 +133,7 @@ public class Server{
 		}
 		byte[] signEncMsg = msgStorage.getSignature(userID, label, counter);
 		byte[] msg_sign = MessageTools.concatenate(encMsg, signEncMsg);
+		echo("[User " + userID + "]  " + "Message under the label '" + new String(label) + "' retrieved!");
 		return MessageTools.concatenate(Params.RETRIEVE_OK, msg_sign);
 	}
 	
@@ -157,6 +159,11 @@ public class Server{
 	 */
 	@SuppressWarnings("serial")
 	public static class MalformedMessage extends Exception {}
+	
+	private static void echo(String txt) {
+		// if (!Boolean.parseBoolean(System.getProperty("DEBUG"))) return;
+		System.out.println(txt);
+	}
 
 	
 }

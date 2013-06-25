@@ -9,24 +9,29 @@ import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
 import de.uni.trier.infsec.functionalities.pki.real.PKIError;
 import de.uni.trier.infsec.functionalities.pki.real.PKISig;
+import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class UserRegisterApp {
 
+	
 		
 	public static void main(String[] args) {
 		System.setProperty("remotemode", Boolean.toString(true));
-		if (args.length < 1) {
+		int userID=0;
+		if (args.length != 1) {
 			System.out.println("Wrong number of Arguments!\nExpected: UserRegisterApp <user_id [int]>\nExample: UserRegisterApp 101");
+			System.exit(0);
 		} else {
 			try {				
-				int clientID = Integer.parseInt(args[0]);
-				UserRegisterApp.register(clientID);
+				 userID = Integer.parseInt(args[0]);
 			} catch (Exception e) {
-				System.out.println("Something is wrong with arguments.!\nExpected: VoterStandalone <voter_id [int]>\nExample: VoterStandalone 42");
+				System.out.println("Something is wrong with arguments!\nExpected: UserRegisterApp <user_id [int]>\nExample: UserRegisterApp 101");
 				e.printStackTrace();
+				System.exit(0);
 			}
+			UserRegisterApp.register(userID);
 		}
 	}
 
@@ -39,20 +44,27 @@ public class UserRegisterApp {
 		try {
 			PKIEnc.register(user_decryptor.getEncryptor(), Params.PKI_ENC_DOMAIN);
 			PKISig.register(user_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
-
 		} catch (PKIError e) {
 			e.printStackTrace();
+			System.exit(0);
 		} catch (NetworkError e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
 		byte[] id = MessageTools.intToByteArray(userID);
-        byte[] decryptor = PKIEnc.decryptorToBytes(user_decryptor);
+		SymEnc symenc = new SymEnc();
+		byte[] decryptor = PKIEnc.decryptorToBytes(user_decryptor);
         byte[] signer = PKISig.signerToBytes(user_signer);
-        byte[] serialized = MessageTools.concatenate(id, MessageTools.concatenate(decryptor, signer));
+        
+        byte[] decr_sig = MessageTools.concatenate(decryptor, signer);
+        byte[] sym_decr_sig = MessageTools.concatenate(symenc.getKey(), decr_sig);
+        byte[] serialized = MessageTools.concatenate(id, sym_decr_sig);
         try {
-			storeAsFile(serialized, Params.PATH_SERVER);
+			storeAsFile(serialized, Params.PATH_USER + "user" + userID + ".info");
+			System.out.println("User " + userID + " registered!");
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 	

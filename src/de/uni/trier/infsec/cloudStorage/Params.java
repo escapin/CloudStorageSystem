@@ -10,14 +10,14 @@ public class Params {
 	public static final String PATH_STORAGE = System.getProperty("java.io.tmpdir") + File.separator + "CloudStorage" + File.separator;
 	public static final String STORAGE_DB = PATH_STORAGE + File.separator + "cloud_storage.db";
 	public static final String PATH_SERVER = Params.PATH_STORAGE + File.separator + "server.info";
-	public static final String PATH_CLIENT = Params.PATH_STORAGE + File.separator + "client.info";
+	public static final String PATH_USER = Params.PATH_STORAGE + File.separator;
 
 	
 	
 	public static int SERVER_ID = 1;
 	// public static String SERVER_NAME = "192.168.1.1";
 	public static String SERVER_NAME = "localhost";
-	public static int SERVER_PORT= 8080;
+	public static int SERVER_PORT= 7075;
 
 	// Request tags
 	public static byte[] STORE="STORE".getBytes();

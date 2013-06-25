@@ -30,8 +30,10 @@ public class ServerRegisterApp {
 			PKISig.register(server_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
 		} catch (PKIError e) {
 			e.printStackTrace();
+			System.exit(0);
 		} catch (NetworkError e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
 		byte[] id = MessageTools.intToByteArray(Params.SERVER_ID);
         byte[] decryptor = PKIEnc.decryptorToBytes(server_decr);
@@ -41,6 +43,7 @@ public class ServerRegisterApp {
 			storeAsFile(serialized, Params.PATH_SERVER);
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 	
