@@ -23,7 +23,7 @@ public class PKIServerRemote implements PKIServer {
 		request.nonce = CryptoLib.generateNonce();
 		request.domain = domain;
 		request.payload = concatenate(intToByteArray(id), pubKey);
-		
+
 		byte[] response = NetworkClient.sendRequest(PKIMessage.toBytes(request), PKIServerApp.HOSTNAME, PKIServerApp.LISTEN_PORT);
 		PKIMessage responseMsg = PKIMessage.fromBytes(response);
 
