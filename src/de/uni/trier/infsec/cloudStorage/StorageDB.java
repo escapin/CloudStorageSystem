@@ -5,7 +5,6 @@ import java.io.File;
 
 import java.sql.*;
 
-import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;
 import de.uni.trier.infsec.utils.Utilities;
 
 public class StorageDB {

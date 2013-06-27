@@ -4,7 +4,7 @@ How-To run the StorageSystem process:
 
     This starts the public key environment which is needed for
     registration and lookup of public and verification keys.  The
-    PKIServer stores the registered keys at %TEMP%/CloudStorage/PKI_server.db -
+    PKIServer stores the registered keys at %TEMP%PKI_server.db -
     if you want to delete registered keys, you will have to delete this
     file.
 
@@ -26,12 +26,12 @@ How-To run the StorageSystem process:
     keys to folder %TEMP%/CluodStorag/user$(user_id).info
 
  5a. Run class de.uni.trier.infsec.cloudStorage.ClientStoreApp
-	with paramters <user_id [int]> <label [String]> <msg [String]>
+	with parameters <user_id [int]> <label [String]> <msg [String]>
     
     To allow an user to store a message on the server under a specific label.
 
 5b. Run class de.uni.trier.infsec.cloudStorage.ClientRetrieveApp
-	with paramters <user_id [int]> <label [String]>
+	with parameters <user_id [int]> <label [String]>
     
     To allow an user to retrieve the message stored on the server under the specific label.
 
@@ -53,4 +53,4 @@ Run following commands from bin-folder of the compiled project:
 5.2.  java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientRetrieveApp 101 pwd
 
 
-In order to delete the files created, delete the directory %TEMP%/CloudStorage
+In order to delete the files created, delete the directory %TEMP%/CloudStorage and %TEMP%/PKIServer.db
