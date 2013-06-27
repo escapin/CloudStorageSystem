@@ -35,7 +35,7 @@ public class Environment {
 	}
 		
     public static void untrustedOutput(int x) {
-		if (untrustedInput()==0) {
+		if (untrustedInput()==0) {  //FIXME: shouldn't be untrustedInput()!=0 ?
 			result = (x==untrustedInput());
 			throw new Error();  // abort
 		}
