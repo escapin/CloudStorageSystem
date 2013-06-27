@@ -60,7 +60,7 @@ public class Setup {
 			case 1: // client.retrieve
 				label = Environment.untrustedInputMessage();
 				try {
-					client.retreive(label);	// the result (the retrieved message) is ignored
+					client.retrieve(label);	// the result (the retrieved message) is ignored
 				}
 				catch(Exception e) {}
 				break;
