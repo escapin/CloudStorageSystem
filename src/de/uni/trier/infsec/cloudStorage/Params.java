@@ -1,7 +1,5 @@
 package de.uni.trier.infsec.cloudStorage;
 
-import java.io.File;
-
 public class Params {
 
 	public static byte[] PKI_DSIG_DOMAIN = "PKI_DSIG".getBytes();
