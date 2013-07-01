@@ -35,21 +35,21 @@ public class CloudStorageTest extends TestCase {
 		// CLIENT 01
 		int userID01=101;
 		SymEnc symenc01 = new SymEnc();
-		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor(userID01);
-		PKISig.Signer signer01 = new PKISig.Signer(userID01);
+		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor();
+		PKISig.Signer signer01 = new PKISig.Signer();
 		// register the client to the PKIEnc domain
-		PKIEnc.register(decryptor01.getEncryptor(), Params.PKI_ENC_DOMAIN);
-		PKISig.register(signer01.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		PKIEnc.registerEncryptor(decryptor01.getEncryptor(), userID01, Params.PKI_ENC_DOMAIN);
+		PKISig.registerVerifier(signer01.getVerifier(), userID01, Params.PKI_DSIG_DOMAIN);
 		Client client01 = new Client(userID01, symenc01, decryptor01, signer01, network);
 		
 		// CLIENT 02
 		int userID02=102;
 		SymEnc symenc02 = new SymEnc();
-		PKIEnc.Decryptor decryptor02 = new PKIEnc.Decryptor(userID02);
-		PKISig.Signer signer02 = new PKISig.Signer(userID02);
+		PKIEnc.Decryptor decryptor02 = new PKIEnc.Decryptor();
+		PKISig.Signer signer02 = new PKISig.Signer();
 		// register the client to the PKIEnc domain
-		PKIEnc.register(decryptor02.getEncryptor(), Params.PKI_ENC_DOMAIN);
-		PKISig.register(signer02.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		PKIEnc.registerEncryptor(decryptor02.getEncryptor(), userID02, Params.PKI_ENC_DOMAIN);
+		PKISig.registerVerifier(signer02.getVerifier(), userID02, Params.PKI_DSIG_DOMAIN);
 		Client client02 = new Client(userID02, symenc02, decryptor02, signer02, network);
 		
 		
@@ -87,11 +87,11 @@ public class CloudStorageTest extends TestCase {
 		// CLIENT 03
 		int userID03=103;
 		SymEnc symenc03 = new SymEnc();
-		PKIEnc.Decryptor decryptor03 = new PKIEnc.Decryptor(userID03);
-		PKISig.Signer signer03 = new PKISig.Signer(userID03);
+		PKIEnc.Decryptor decryptor03 = new PKIEnc.Decryptor();
+		PKISig.Signer signer03 = new PKISig.Signer();
 		// register the client to the PKIEnc domain
-		PKIEnc.register(decryptor03.getEncryptor(), Params.PKI_ENC_DOMAIN);
-		PKISig.register(signer03.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		PKIEnc.registerEncryptor(decryptor03.getEncryptor(), userID03, Params.PKI_ENC_DOMAIN);
+		PKISig.registerVerifier(signer03.getVerifier(), userID03, Params.PKI_DSIG_DOMAIN);
 		Client client03 = new Client(userID03, symenc03, decryptor03, signer03, network);
 		
 		// 

@@ -15,10 +15,10 @@ public class Server{
 	private static StorageDB msgStorage;
 	
 	public static void init() throws NetworkError, PKIError {
-		server_decr = new PKIEnc.Decryptor(Params.SERVER_ID);
-		PKIEnc.register(server_decr.getEncryptor(), Params.PKI_ENC_DOMAIN);
-		server_sign = new PKISig.Signer(Params.SERVER_ID);
-		PKISig.register(server_sign.getVerifier(), Params.PKI_DSIG_DOMAIN);
+		server_decr = new PKIEnc.Decryptor();
+		PKIEnc.registerEncryptor(server_decr.getEncryptor(), Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
+		server_sign = new PKISig.Signer();
+		PKISig.registerVerifier(server_sign.getVerifier(), Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
 		msgStorage = new StorageDB(Params.STORAGE_DB);
 	}
 	

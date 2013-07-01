@@ -23,11 +23,11 @@ public class ServerRegisterApp {
 
 	private static void registerAndSave(){
 		PKI.useRemoteMode();
-		PKIEnc.Decryptor server_decr = new PKIEnc.Decryptor(Params.SERVER_ID);
-		PKISig.Signer server_signer = new PKISig.Signer(Params.SERVER_ID);
+		PKIEnc.Decryptor server_decr = new PKIEnc.Decryptor();
+		PKISig.Signer server_signer = new PKISig.Signer();
 		try {
-			PKIEnc.register(server_decr.getEncryptor(), Params.PKI_ENC_DOMAIN);
-			PKISig.register(server_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
+			PKIEnc.registerEncryptor(server_decr.getEncryptor(), Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
+			PKISig.registerVerifier(server_signer.getVerifier(), Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
 		} catch (PKIError e) {
 			e.printStackTrace();
 			System.exit(0);

@@ -39,11 +39,11 @@ public class UserRegisterApp {
 	
 	private static void register(int userID) {
 		PKI.useRemoteMode();
-		PKIEnc.Decryptor user_decryptor = new PKIEnc.Decryptor(userID);
-		PKISig.Signer user_signer = new PKISig.Signer(userID);
+		PKIEnc.Decryptor user_decryptor = new PKIEnc.Decryptor();
+		PKISig.Signer user_signer = new PKISig.Signer();
 		try {
-			PKIEnc.register(user_decryptor.getEncryptor(), Params.PKI_ENC_DOMAIN);
-			PKISig.register(user_signer.getVerifier(), Params.PKI_DSIG_DOMAIN);
+			PKIEnc.registerEncryptor(user_decryptor.getEncryptor(), userID, Params.PKI_ENC_DOMAIN);
+			PKISig.registerVerifier(user_signer.getVerifier(), userID, Params.PKI_DSIG_DOMAIN);
 		} catch (PKIError e) {
 			e.printStackTrace();
 			System.exit(0);
