@@ -33,7 +33,10 @@ public class Setup {
 			PKISig.registerVerifier(client_signer.getVerifier(), HONEST_CLIENT_ID, Params.PKI_DSIG_DOMAIN);
 			client = new Client(HONEST_CLIENT_ID, client_symenc, client_decryptor, client_signer, new NetworkReal());
 		} 
-		catch (PKIError | NetworkError e) { // registration failed or it was impossible to obtain the server public keys
+		catch (PKIError e) { // registration failed -- id already registered
+			return;
+		}
+		catch (NetworkError e) { // registration failed -- problems with the connection
 			return;
 		}
 
@@ -49,7 +52,9 @@ public class Setup {
 				if (msg1.length != msg2.length) break;
 				byte[] msg = new byte[msg1.length];
 				for (int i=0; i<msg1.length; ++i) {
-					msg[i] = (secret_bit ? msg1[i] : msg2[i]);
+					try {
+						msg[i] = (secret_bit ? msg1[i] : msg2[i]);
+					} catch (Exception e) { }
 				}
 				try {
 					client.store(msg, label);
