@@ -1,10 +1,10 @@
 package de.uni.trier.infsec.functionalities.pki.idealcor;
 
+import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
 import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.utils.MessageTools;
 
 /**
  * Ideal functionality for public-key encryption with PKI (Public Key Infrastructure).
@@ -51,21 +51,22 @@ public class PKIEnc {
 	/** Encryptor encapsulating possibly corrupted public key.
 	 */
 	static public class Encryptor {
-		public final int id;
 		protected byte[] publicKey;
 
-		public Encryptor(int id, byte[] publicKey) {
-			this.id = id;
+		public Encryptor(byte[] publicKey) {
 			this.publicKey = publicKey;
 		}
 
 		public byte[] encrypt(byte[] message) {
-			return MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.copyOf(message),
-				MessageTools.copyOf(publicKey)));
+			return MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.copyOf(message), MessageTools.copyOf(publicKey)));
 		}
 
 		public byte[] getPublicKey() {
 			return MessageTools.copyOf(publicKey);
+		}
+
+		protected Encryptor copy() {
+			return new Encryptor(publicKey);
 		}
 	}
 
@@ -79,8 +80,8 @@ public class PKIEnc {
 	static public final class UncorruptedEncryptor extends Encryptor {
 		private EncryptionLog log;
 
-		private UncorruptedEncryptor(int id, byte[] publicKey, EncryptionLog log) {
-			super(id, publicKey);
+		private UncorruptedEncryptor(byte[] publicKey, EncryptionLog log) {
+			super(publicKey);
 			this.log = log;
 		}
 
@@ -88,26 +89,27 @@ public class PKIEnc {
 			byte[] randomCipher = null;
 			// keep asking the environment for the ciphertext, until a fresh one is given:
 			while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
-				randomCipher = MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.getZeroMessage(message.length), 
-						MessageTools.copyOf(publicKey)));
+				randomCipher = MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.getZeroMessage(message.length), MessageTools.copyOf(publicKey)));
 			}
 			log.add(MessageTools.copyOf(message), randomCipher);
 			return MessageTools.copyOf(randomCipher);
+		}
+
+		protected Encryptor copy() {
+			return new UncorruptedEncryptor(publicKey, log);
 		}
 	}
 
 	/** An object encapsulating the private and public keys of some party. */
 	static public class Decryptor {
-		public final int id;
 		private byte[] publicKey;
 		private byte[] privateKey;
 		private EncryptionLog log;
 
-		public Decryptor(int id) {
+		public Decryptor() {
 			KeyPair keypair = CryptoLib.pke_generateKeyPair();
 			this.privateKey = MessageTools.copyOf(keypair.privateKey);
 			this.publicKey = MessageTools.copyOf(keypair.publicKey);
-			this.id = id;
 			this.log = new EncryptionLog();
 		}
 
@@ -124,33 +126,36 @@ public class PKIEnc {
 
 		/** Returns a new uncorrupted encryptor object sharing the same public key, ID, and log. */
 		public Encryptor getEncryptor() {
-			return new UncorruptedEncryptor(id, publicKey, log);
+			return new UncorruptedEncryptor(publicKey, log);
 		}
 	}
 
-	// TODO: pki_domain is ignored in the methods below
-	public static void register(Encryptor encryptor, byte[] pki_domain) throws PKIError, NetworkError {
+	public static void registerEncryptor(Encryptor encryptor, int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		if( registeredAgents.fetch(encryptor.id) != null ) // encryptor.id is registered?
+		if( registeredAgents.fetch(id, pki_domain) != null ) // encryptor.id is registered?
 			throw new PKIError();
-		registeredAgents.add(encryptor);
+		registeredAgents.add(id, pki_domain, encryptor);
 	}
 
 	public static Encryptor getEncryptor(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		PKIEnc.Encryptor enc = registeredAgents.fetch(id);
+		PKIEnc.Encryptor enc = registeredAgents.fetch(id, pki_domain);
 		if (enc == null)
 			throw new PKIError();
-		return enc;
+		return enc.copy();
 	}
 
 	/// IMPLEMENTATION ///
 
 	private static class RegisteredAgents {
 		private static class EncryptorList {
+			final int id;
+			byte[] domain;
 			PKIEnc.Encryptor encryptor;
-			EncryptorList  next;
-			EncryptorList(PKIEnc.Encryptor encryptor, EncryptorList next) {
+			EncryptorList next;
+			EncryptorList(int id, byte[] domain, PKIEnc.Encryptor encryptor, EncryptorList next) {
+				this.id = id;
+				this.domain = domain;
 				this.encryptor= encryptor;
 				this.next = next;
 			}
@@ -158,13 +163,13 @@ public class PKIEnc {
 
 		private EncryptorList first = null;
 
-		public void add(PKIEnc.Encryptor encr) {
-			first = new EncryptorList(encr, first);
+		public void add(int id, byte[] domain, PKIEnc.Encryptor encr) {
+			first = new EncryptorList(id, domain, encr, first);
 		}
 
-		PKIEnc.Encryptor fetch(int ID) {
+		PKIEnc.Encryptor fetch(int ID, byte[] domain) {
 			for( EncryptorList node = first;  node != null;  node = node.next ) {
-				if( ID == node.encryptor.id )
+				if( ID == node.id && MessageTools.equal(domain, node.domain) )
 					return node.encryptor;
 			}
 			return null;

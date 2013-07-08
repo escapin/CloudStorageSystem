@@ -1,10 +1,10 @@
 package de.uni.trier.infsec.functionalities.pki.idealcor;
 
+import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.environment.Environment;
 import de.uni.trier.infsec.environment.network.NetworkError;
 import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.environment.crypto.KeyPair;
-import de.uni.trier.infsec.utils.MessageTools;
 
 /**
  * Ideal functionality for digital signatures with PKI (Public Key Infrastructure).
@@ -48,11 +48,9 @@ import de.uni.trier.infsec.utils.MessageTools;
 public class PKISig {
 
 	static public class Verifier {
-		public final int id;
 		protected byte[] verifKey;
 
-		public Verifier(int id, byte[] verifKey) {
-			this.id = id;
+		public Verifier(byte[] verifKey) {
 			this.verifKey = verifKey;
 		}
 
@@ -63,13 +61,17 @@ public class PKISig {
 		public byte[] getVerifKey() {
 			return MessageTools.copyOf(verifKey);
 		}
+
+		protected Verifier copy() {
+			return new Verifier(verifKey);
+		}
 	}
 
 	static public final class UncorruptedVerifier extends Verifier {
 		private Log log;
 
-		private UncorruptedVerifier(int id, byte[] verifKey, Log log) {
-			super(id,verifKey);
+		private UncorruptedVerifier(byte[] verifKey, Log log) {
+			super(verifKey);
 			this.log = log;
 		}
 
@@ -79,6 +81,9 @@ public class PKISig {
 			return CryptoLib.verify(message, signature, verifKey) && log.contains(message);
 		}
 
+		protected Verifier copy() {
+			return new UncorruptedVerifier(verifKey, log);
+		}
 	}
 
 	/**
@@ -88,16 +93,14 @@ public class PKISig {
 	 * is stores in the log.
 	 */
 	static final public class Signer {
-		public final int id;
 		private byte[] verifKey;
 		private byte[] signKey;
 		private Log log;
 
-		public Signer(int id) {
+		public Signer() {
 			KeyPair keypair = CryptoLib.generateSignatureKeyPair(); // note usage of the real cryto lib here
 			this.signKey = MessageTools.copyOf(keypair.privateKey);
 			this.verifKey = MessageTools.copyOf(keypair.publicKey);
-			this.id = id;
 			this.log = new Log();
 		}
 
@@ -114,33 +117,36 @@ public class PKISig {
 		}
 
 		public Verifier getVerifier() {
-			return new UncorruptedVerifier(id, verifKey, log);
+			return new UncorruptedVerifier(verifKey, log);
 		}
 	}
 
-	// FIXME: pki_domain is ignored in the methods below
-	public static void register(Verifier verifier, byte[] pki_domain) throws PKIError, NetworkError {
+	public static void registerVerifier(Verifier verifier, int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		if( registeredAgents.fetch(verifier.id) != null ) // verified.ID is registered?
+		if( registeredAgents.fetch(id, pki_domain) != null ) // verified.ID is registered?
 			throw new PKIError();
-		registeredAgents.add(verifier);
+		registeredAgents.add(id, pki_domain, verifier);
 	}
 
 	public static Verifier getVerifier(int id, byte[] pki_domain) throws PKIError, NetworkError {
 		if( Environment.untrustedInput() == 0 ) throw new NetworkError();
-		Verifier verif = registeredAgents.fetch(id);
+		Verifier verif = registeredAgents.fetch(id, pki_domain);
 		if (verif == null)
 			throw new PKIError();
-		return verif;
+		return verif.copy();
 	}
 
 	/// IMPLEMENTATION ///
 
 	private static class RegisteredAgents {
 		private static class VerifierList {
+			final int id;
+			byte[] domain;			
 			PKISig.Verifier verifier;
 			VerifierList  next;
-			VerifierList(PKISig.Verifier verifier, VerifierList next) {
+			VerifierList(int id, byte[] domain,  Verifier verifier, VerifierList next) {
+				this.id = id;
+				this.domain = domain;
 				this.verifier = verifier;
 				this.next = next;
 			}
@@ -148,13 +154,13 @@ public class PKISig {
 
 		private VerifierList first = null;
 
-		public void add(PKISig.Verifier verif) {
-			first = new VerifierList(verif, first);
+		public void add(int id, byte[] domain, PKISig.Verifier verif) {
+			first = new VerifierList(id, domain, verif, first);
 		}
 
-		PKISig.Verifier fetch(int ID) {
+		PKISig.Verifier fetch(int ID, byte[] domain) {
 			for( VerifierList node = first;  node != null;  node = node.next ) {
-				if( ID == node.verifier.id )
+				if( ID == node.id && MessageTools.equal(domain, node.domain) )
 					return node.verifier;
 			}
 			return null;

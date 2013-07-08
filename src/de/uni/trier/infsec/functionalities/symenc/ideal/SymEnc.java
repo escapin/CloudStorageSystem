@@ -1,8 +1,16 @@
-package de.uni.trier.infsec.functionalities.symenc;
+package de.uni.trier.infsec.functionalities.symenc.ideal;
 
-import de.uni.trier.infsec.environment.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
+import de.uni.trier.infsec.environment.crypto.CryptoLib;
 
+/**
+ * Ideal functionality for private symmetric key encrytpion. 
+ * 
+ * This functionality is meant to be used, if a user wants to generate
+ * a symmetric key to be used solely by her. The functionality provides
+ * no means to share the key. The key is generated in the constructor
+ * and never leaves the object.
+ */
 public class SymEnc {
 
 	private byte[] key;
@@ -16,8 +24,7 @@ public class SymEnc {
 		byte[] randomCipher = null;
 		// keep asking the environment for the ciphertext, until a fresh one is given:
 		while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
-			randomCipher = MessageTools.copyOf(CryptoLib.symkey_encrypt(MessageTools.copyOf(key), 
-					MessageTools.getZeroMessage(plaintext.length)));
+			randomCipher = MessageTools.copyOf(CryptoLib.symkey_encrypt(MessageTools.copyOf(key), MessageTools.getZeroMessage(plaintext.length)));
 		}
 		log.add(MessageTools.copyOf(plaintext), randomCipher);
 		return MessageTools.copyOf(randomCipher);		
@@ -25,8 +32,7 @@ public class SymEnc {
 	
 	public byte[] decrypt(byte[] ciphertext) { 
 		if (!log.containsCiphertext(ciphertext)) {
-			return MessageTools.copyOf( CryptoLib.symkey_decrypt(MessageTools.copyOf(key),
-					MessageTools.copyOf(ciphertext)) );
+			return MessageTools.copyOf( CryptoLib.symkey_decrypt(MessageTools.copyOf(key), MessageTools.copyOf(ciphertext)) );
 		} else {
 			return MessageTools.copyOf( log.lookup(ciphertext) );
 		}			
