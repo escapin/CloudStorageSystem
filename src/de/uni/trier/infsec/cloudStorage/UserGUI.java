@@ -30,6 +30,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import de.uni.trier.infsec.cloudStorage.Client.CounterOutOfDate;
+import de.uni.trier.infsec.cloudStorage.Client.StorageError;
 import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
 import de.uni.trier.infsec.functionalities.pki.real.PKISig;
@@ -38,6 +40,7 @@ import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import javax.swing.JTextArea;
+import java.awt.Component;
 
 
 
@@ -45,14 +48,29 @@ import javax.swing.JTextArea;
 public class UserGUI extends JFrame {
 	
 	private static final long serialVersionUID = 1L;
-	private int userID;
+	
 	private JTextField textField;
 	private JLabel lblUserNotRegister;
-	private JTextField textField_1;
 	private JPanel center;
 	private final static String STORE = "Store";
     private final static String RETRIEVE = "Retrieve";
-	
+    private JTextField labelField;
+	private JTextArea msgToStore;
+	private JTextArea textMsgRetrieved;
+	private JLabel lblStoreStatus;
+	private JLabel lblRetrieveStatus;
+	private JComboBox comboBox;
+	private JLabel lblWait;
+	/*
+	 * CORE FIELD
+	 */
+	private int userID;
+	private PKIEnc.Decryptor user_decr;
+	private PKISig.Signer user_sign;
+	private SymEnc symenc;
+	private Client client;
+	private static final int STORE_ATTEMPTS = 3; 
+	// attempts to store a msg under a label in such a way that server and client counters are aligned
 	
 	/**
 	 * Launch the application.
@@ -68,6 +86,7 @@ public class UserGUI extends JFrame {
 				try {
 					UserGUI frame = new UserGUI();
 					frame.setVisible(true);
+					frame.setResizable(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -82,7 +101,7 @@ public class UserGUI extends JFrame {
 	public UserGUI() {
 		setTitle("User - Cloud Storage 2013");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 489, 334);
 		
 		
 		CardLayout cl = new CardLayout();
@@ -101,9 +120,11 @@ public class UserGUI extends JFrame {
 		lblUserNotRegister.setHorizontalAlignment(SwingConstants.LEFT);
 		lblUserNotRegister.setForeground(Color.RED);
 		
+		lblWait = new JLabel();
+		lblWait.setHorizontalAlignment(SwingConstants.CENTER);
 		GroupLayout gl_login = new GroupLayout(login);
 		gl_login.setHorizontalGroup(
-			gl_login.createParallelGroup(Alignment.LEADING)
+			gl_login.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_login.createSequentialGroup()
 					.addGap(57)
 					.addGroup(gl_login.createParallelGroup(Alignment.LEADING)
@@ -111,10 +132,14 @@ public class UserGUI extends JFrame {
 							.addComponent(lblUserId, GroupLayout.PREFERRED_SIZE, 56, GroupLayout.PREFERRED_SIZE)
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(textField, GroupLayout.PREFERRED_SIZE, 114, GroupLayout.PREFERRED_SIZE))
-						.addGroup(gl_login.createParallelGroup(Alignment.TRAILING)
-							.addComponent(btnLogIn)
-							.addComponent(lblUserNotRegister, GroupLayout.PREFERRED_SIZE, 368, GroupLayout.PREFERRED_SIZE)))
-					.addContainerGap(25, Short.MAX_VALUE))
+						.addComponent(lblUserNotRegister, GroupLayout.PREFERRED_SIZE, 368, GroupLayout.PREFERRED_SIZE))
+					.addContainerGap(64, Short.MAX_VALUE))
+				.addGroup(gl_login.createSequentialGroup()
+					.addContainerGap(247, Short.MAX_VALUE)
+					.addComponent(lblWait, GroupLayout.PREFERRED_SIZE, 69, GroupLayout.PREFERRED_SIZE)
+					.addGap(32)
+					.addComponent(btnLogIn, GroupLayout.PREFERRED_SIZE, 93, GroupLayout.PREFERRED_SIZE)
+					.addGap(48))
 		);
 		gl_login.setVerticalGroup(
 			gl_login.createParallelGroup(Alignment.TRAILING)
@@ -126,49 +151,63 @@ public class UserGUI extends JFrame {
 					.addGap(37)
 					.addComponent(lblUserNotRegister, GroupLayout.PREFERRED_SIZE, 88, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(btnLogIn)
-					.addGap(61))
+					.addGroup(gl_login.createParallelGroup(Alignment.BASELINE)
+						.addComponent(btnLogIn, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
+						.addComponent(lblWait))
+					.addGap(85))
 		);
 		login.setLayout(gl_login);
 		
 		btnLogIn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
-				lblUserNotRegister.setText("");
-				boolean isNumber=true;
+				if(textField.getText().length()==0){
+					lblUserNotRegister.setText("<html>User ID field empty!<br>Please insert an ID number of a registered user.</html>");
+					return;
+				}
+				
 				try{
 					userID = Integer.parseInt(textField.getText());
+					if(userID<0)
+						throw new NumberFormatException();
 				} catch (NumberFormatException e){
-					isNumber=false;
 					System.out.println("'" + textField.getText() + "' is not a proper userID!\nPlease insert the ID number of a previously registered user.");
 					lblUserNotRegister.setText("<html>'" + textField.getText() + "' is not a proper userID!<br>Please insert the ID number of a registered user.</html>");
-					
+					return;
 				}
-				if(isNumber){
-					boolean userRegistered=true;
-					try {
-						setupClient(userID);
-					} catch (FileNotFoundException e){
-						userRegistered=false;
-						System.out.println("User " + userID + " not registered!\nType \'UserRegisterApp <user_id [int]>\' in a terminal to register him/her.");
-						lblUserNotRegister.setText("<html>User " + userID + " not registered!<br>Type \'UserRegisterApp &lt;user_id [int]&gt;\' in a terminal to register him/her.</html>");
-					} catch (IOException e){
-						userRegistered=false;
-						System.out.println("IOException occurred while reading the credentials of the user!");
-						lblUserNotRegister.setText("IOException occurred while reading the credentials of the user!");
-					} catch (PKIError e){
-						userRegistered=false;
-						System.out.println("PKI Error occurred while connecting with the PKI server!");
-						lblUserNotRegister.setText("PKI Error occurred while connecting with the PKI server!");
-					} catch (NetworkError e){
-						userRegistered=false;
-						System.out.println("Network Error occurred while connecting with the PKI server!");
-						lblUserNotRegister.setText("Network Error Error occurred while connecting with the PKI server!");
-					}
-					if(userRegistered){
-						setTitle("User " + userID + " - Cloud Storage 2013");
-						CardLayout cl = (CardLayout) getContentPane().getLayout();
-						cl.show(getContentPane(), "2");
-					}
+				
+				
+				lblUserNotRegister.setText("");
+				lblWait.setText("Wait..."); // FIXME: it doesn't work!
+				
+				JPanel loginPanel = (JPanel) ((JButton)ev.getSource()).getParent();
+				//lblWait.paintImmediately(loginPanel.getVisibleRect());
+				loginPanel.paintImmediately(loginPanel.getVisibleRect());
+				
+				boolean userRegistered=false;
+				try {
+					setupClient(userID);
+					userRegistered=true;
+				} catch (FileNotFoundException e){
+					System.out.println("User " + userID + " not registered!\nType \'UserRegisterApp <user_id [int]>\' in a terminal to register him/her.");
+					lblUserNotRegister.setText("<html>User " + userID + " not registered!<br>Type \'UserRegisterApp &lt;user_id [int]&gt;\' in a terminal to register him/her.</html>");
+				} catch (IOException e){
+					System.out.println("IOException occurred while reading the credentials of the user!");
+					lblUserNotRegister.setText("IOException occurred while reading the credentials of the user!");
+				} catch (PKIError e){
+					System.out.println("PKI Error occurred: perhaps the PKI server is not running!");
+					lblUserNotRegister.setText("<html>PKI Error:<br> perhaps the PKI server is not running!</html>");
+				} catch (NetworkError e){
+					//FIXME: java.net.ConnectException when the PKIServer is not running!
+					System.out.println("Network Error occurred while connecting with the PKI server: perhaps the PKI server is not running!");
+					lblUserNotRegister.setText("<html>Network Error occurred:<br> perhaps the PKI server is not running!</html>");
+				} finally{
+					lblWait.setText("");
+				}
+				if(userRegistered){
+					textField.setText("");
+					setTitle("User " + userID + " - Cloud Storage 2013");
+					CardLayout cl = (CardLayout) getContentPane().getLayout();
+					cl.show(getContentPane(), "2");
 				}
 			}
 		});
@@ -188,33 +227,32 @@ public class UserGUI extends JFrame {
 		JPanel north = new JPanel();
 		main.add(north, BorderLayout.NORTH);
 		
-		JComboBox comboBox = new JComboBox();
+		comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(new String[] {STORE, RETRIEVE}));
+		JLabel lblLabel = new JLabel("Label:");
 		
-		JLabel lblUserId_1 = new JLabel("Label:");
-		
-		textField_1 = new JTextField();
-		textField_1.setColumns(10);
+		labelField = new JTextField();
+		labelField.setColumns(10);
 		GroupLayout gl_north = new GroupLayout(north);
 		gl_north.setHorizontalGroup(
 			gl_north.createParallelGroup(Alignment.TRAILING)
-				.addGroup(gl_north.createSequentialGroup()
+				.addGroup(Alignment.LEADING, gl_north.createSequentialGroup()
 					.addGap(23)
 					.addComponent(comboBox, GroupLayout.PREFERRED_SIZE, 118, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED, 85, Short.MAX_VALUE)
-					.addComponent(lblUserId_1)
+					.addGap(68)
+					.addComponent(lblLabel)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(textField_1, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE)
-					.addGap(34))
+					.addComponent(labelField, GroupLayout.PREFERRED_SIZE, 162, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(56, Short.MAX_VALUE))
 		);
 		gl_north.setVerticalGroup(
-			gl_north.createParallelGroup(Alignment.LEADING)
-				.addGroup(Alignment.TRAILING, gl_north.createSequentialGroup()
+			gl_north.createParallelGroup(Alignment.TRAILING)
+				.addGroup(gl_north.createSequentialGroup()
 					.addContainerGap(29, Short.MAX_VALUE)
 					.addGroup(gl_north.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblUserId_1)
-						.addComponent(textField_1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(comboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+						.addComponent(labelField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(comboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(lblLabel))
 					.addGap(20))
 		);
 		north.setLayout(gl_north);
@@ -229,52 +267,182 @@ public class UserGUI extends JFrame {
 		JPanel storePanel = new JPanel();
 		
 		
-		JLabel lblInsertTheMessage = new JLabel("Insert the message:");
+		JLabel lblInsertTheMessage = new JLabel("Insert the message to store:");
+		lblStoreStatus = new JLabel();
+		lblStoreStatus.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblStoreStatus.setFont(new Font("Dialog", Font.PLAIN, 14));
 		
-		JTextArea textToStore = new JTextArea();
-		JScrollPane ScrollTextToStore = new JScrollPane(textToStore);
+		msgToStore = new JTextArea();
+		JScrollPane ScrollTextToStore = new JScrollPane(msgToStore);
+		
+		JButton btnStore = new JButton("Store");
+		btnStore.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				
+				lblStoreStatus.setForeground(Color.BLACK);
+				if(labelField.getText().length()==0){
+					lblStoreStatus.setText("Label empty!");
+					return;
+				}
+				if(msgToStore.getText().length()==0){
+					lblStoreStatus.setText("Message to store empty!");
+					return;
+				}
+				
+				lblStoreStatus.setForeground(Color.BLACK);
+				lblStoreStatus.setText("Wait...");
+				JPanel storePanel = (JPanel) ((JButton) ev.getSource()).getParent();
+				storePanel.paintImmediately(storePanel.getVisibleRect()); // it would be better to use a separate Thread 
+				
+				boolean correctlyStored=false;
+				boolean outOfDate=true;
+				int i=0;
+				for(;i<STORE_ATTEMPTS && outOfDate && !correctlyStored; i++){
+					outOfDate=false;
+					try{
+						client.store(msgToStore.getText().getBytes(), labelField.getText().getBytes());
+						correctlyStored=true;
+					} catch(CounterOutOfDate e){
+						outOfDate=true;
+					} catch (NetworkError e) {
+						lblStoreStatus.setForeground(Color.RED);
+						lblStoreStatus.setText("<html>Network Error: perhaps the server is not running!</html>");
+					} catch (StorageError e) {
+						lblStoreStatus.setForeground(Color.RED);
+						lblStoreStatus.setText("<html>The message has not been stored due to a Storage Error!</html>");
+					}
+				}
+				if(i>=STORE_ATTEMPTS && !correctlyStored){
+					lblStoreStatus.setForeground(Color.RED);
+					lblStoreStatus.setText("<html>The message has not been stored because the counter was always out of date!</html>");
+					System.out.println("The message has not been stored: during " + STORE_ATTEMPTS + " attempts, the Client's counter has always been out of date!");
+				}
+				if(correctlyStored){
+					msgToStore.setText("");
+					lblStoreStatus.setForeground(Color.BLACK);
+					lblStoreStatus.setText("<html>Message stored!</html>");
+				}
+				
+			}
+		});
+		
+		
 		GroupLayout gl_storePanel = new GroupLayout(storePanel);
 		gl_storePanel.setHorizontalGroup(
 			gl_storePanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_storePanel.createSequentialGroup()
-					.addGroup(gl_storePanel.createParallelGroup(Alignment.LEADING)
+					.addGap(24)
+					.addGroup(gl_storePanel.createParallelGroup(Alignment.TRAILING, false)
 						.addGroup(gl_storePanel.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(lblInsertTheMessage))
-						.addGroup(gl_storePanel.createSequentialGroup()
-							.addGap(27)
-							.addComponent(ScrollTextToStore, GroupLayout.PREFERRED_SIZE, 389, GroupLayout.PREFERRED_SIZE)))
-					.addContainerGap(34, Short.MAX_VALUE))
+							.addComponent(lblStoreStatus, GroupLayout.PREFERRED_SIZE, 313, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+							.addComponent(btnStore))
+						.addComponent(lblInsertTheMessage, Alignment.LEADING)
+						.addComponent(ScrollTextToStore, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 412, GroupLayout.PREFERRED_SIZE))
+					.addContainerGap(53, Short.MAX_VALUE))
 		);
 		gl_storePanel.setVerticalGroup(
 			gl_storePanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_storePanel.createSequentialGroup()
+					.addContainerGap()
 					.addComponent(lblInsertTheMessage)
-					.addGap(18)
+					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(ScrollTextToStore, GroupLayout.PREFERRED_SIZE, 103, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(54, Short.MAX_VALUE))
+					.addPreferredGap(ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
+					.addGroup(gl_storePanel.createParallelGroup(Alignment.LEADING)
+						.addComponent(btnStore)
+						.addComponent(lblStoreStatus, GroupLayout.PREFERRED_SIZE, 36, GroupLayout.PREFERRED_SIZE))
+					.addGap(22))
 		);
 		storePanel.setLayout(gl_storePanel);
 		
 		JPanel retrievePanel = new JPanel();
 		
+		lblRetrieveStatus = new JLabel();
+		lblRetrieveStatus.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblRetrieveStatus.setFont(new Font("Dialog", Font.PLAIN, 14));
 		
-		JLabel lblNewLabel = new JLabel("Retreive the text");
+		JLabel lblMessageRetrieved = new JLabel("Message Retrieved:");
+		
+		JButton btnRetrieve = new JButton("Retrieve");
+		// FIXME: the button is moving when the 'lblRetrieveStatus' label changes!
+		btnRetrieve.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				lblRetrieveStatus.setForeground(Color.BLACK);
+				if(labelField.getText().length()==0){
+					lblRetrieveStatus.setText("Label empty!");
+					return;
+				}
+				
+				textMsgRetrieved.setText("");
+				lblRetrieveStatus.setForeground(Color.BLACK);
+				lblRetrieveStatus.setText("Wait...");	
+				
+				JPanel retrievePanel = (JPanel) ((JButton) ev.getSource()).getParent();
+				retrievePanel.paintImmediately(retrievePanel.getVisibleRect()); // it would be better to use a separate Thread 
+				
+				byte[] msg=null;
+				boolean msgRetrieved=false;
+				try {
+					msg = client.retrieve(labelField.getText().getBytes());
+					msgRetrieved=true;
+				} catch (NetworkError e) {
+					lblRetrieveStatus.setForeground(Color.RED);
+					lblRetrieveStatus.setText("<html>Network Error: perhaps the server is not running!</html>");
+				} catch (StorageError e) {
+					lblRetrieveStatus.setForeground(Color.RED);
+					lblRetrieveStatus.setText("<html>The message has not been stored due to a Storage Error!</html>");
+				}
+				if(msgRetrieved)
+					if(msg!=null){
+						textMsgRetrieved.setText(new String(msg));
+						lblRetrieveStatus.setText("");
+					}
+					else{
+						lblRetrieveStatus.setForeground(Color.BLACK);
+						lblRetrieveStatus.setText("<html>No message stored under this label!</html>");
+					}
+			}
+		});
+		
+		
+		textMsgRetrieved = new JTextArea();
+		textMsgRetrieved.setEditable(false);
+		JScrollPane scrollMsgRetrieved = new JScrollPane(textMsgRetrieved);
+		
+		
+		
 		GroupLayout gl_retrievePanel = new GroupLayout(retrievePanel);
 		gl_retrievePanel.setHorizontalGroup(
 			gl_retrievePanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_retrievePanel.createSequentialGroup()
-					.addGap(27)
-					.addComponent(lblNewLabel)
-					.addContainerGap(353, Short.MAX_VALUE))
+					.addContainerGap()
+					.addGroup(gl_retrievePanel.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_retrievePanel.createSequentialGroup()
+							.addComponent(lblMessageRetrieved)
+							.addContainerGap(336, Short.MAX_VALUE))
+						.addGroup(gl_retrievePanel.createSequentialGroup()
+							.addGroup(gl_retrievePanel.createParallelGroup(Alignment.TRAILING)
+								.addComponent(scrollMsgRetrieved, GroupLayout.PREFERRED_SIZE, 421, GroupLayout.PREFERRED_SIZE)
+								.addGroup(gl_retrievePanel.createSequentialGroup()
+									.addComponent(lblRetrieveStatus, GroupLayout.PREFERRED_SIZE, 242, GroupLayout.PREFERRED_SIZE)
+									.addGap(86)
+									.addComponent(btnRetrieve)))
+							.addGap(56))))
 		);
 		gl_retrievePanel.setVerticalGroup(
 			gl_retrievePanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_retrievePanel.createSequentialGroup()
-					.addContainerGap()
-					.addComponent(lblNewLabel)
-					.addContainerGap(163, Short.MAX_VALUE))
+					.addGroup(gl_retrievePanel.createParallelGroup(Alignment.BASELINE)
+						.addComponent(btnRetrieve)
+						.addComponent(lblRetrieveStatus, GroupLayout.PREFERRED_SIZE, 39, GroupLayout.PREFERRED_SIZE))
+					.addGap(18)
+					.addComponent(lblMessageRetrieved)
+					.addGap(18)
+					.addComponent(scrollMsgRetrieved, GroupLayout.PREFERRED_SIZE, 103, GroupLayout.PREFERRED_SIZE)
+					.addGap(31))
 		);
+		
 		retrievePanel.setLayout(gl_retrievePanel);
 		
 		center.add(storePanel, STORE);
@@ -283,6 +451,11 @@ public class UserGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				 JComboBox jcb = (JComboBox) e.getSource();
 				 CardLayout cl = (CardLayout)(center.getLayout());
+				 
+				 lblWait.setText("");
+				 lblStoreStatus.setText("");
+				 lblRetrieveStatus.setText("");
+				 
 				 cl.show(center, jcb.getSelectedItem().toString());
 			}
 		});
@@ -295,9 +468,22 @@ public class UserGUI extends JFrame {
 		btnLogOut.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				destroyClient();
-				setTitle("User - Cloud Storage 2013");
+				
+				lblUserNotRegister.setText("");
+				labelField.setText("");
+				lblStoreStatus.setText("");
+				lblRetrieveStatus.setText("");
+				textMsgRetrieved.setText("");
+				
+				comboBox.setSelectedIndex(0); // set the combo box to Store!
+				
+				CardLayout centerCl = (CardLayout) center.getLayout();
+				centerCl.show(center, STORE);
+				
 				CardLayout cl = (CardLayout) getContentPane().getLayout();
 				cl.show(getContentPane(), "1");
+				
+				setTitle("User - Cloud Storage 2013");
 			}
 		});
 		GroupLayout gl_south = new GroupLayout(south);
@@ -318,14 +504,10 @@ public class UserGUI extends JFrame {
 	}
 	
 	
+	
 	/*
 	 * CORE CODE
 	 */
-	private PKIEnc.Decryptor user_decr;
-	private PKISig.Signer user_sign;
-	private SymEnc symenc;
-	Client client;
-	
 	private void setupClient(int userID) throws IOException, PKIError, NetworkError{
 		System.setProperty("remotemode", Boolean.toString(true));
 		PKI.useRemoteMode();
