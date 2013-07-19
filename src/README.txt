@@ -24,16 +24,19 @@ How-To run the StorageSystem process:
     This will run registration process for the user with that user_id. It will
     register its keys at the PKI environment and store the serialized
     keys to folder %TEMP%/CluodStorag/user$(user_id).info
-
- 5a. Run class de.uni.trier.infsec.cloudStorage.ClientStoreApp
-	with parameters <user_id [int]> <label [String]> <msg [String]>
     
-    To allow an user to store a message on the server under a specific label.
+5a  Run class de.uni.trier.infsec.cloudStorage.UserGUI
+	to start the application which allows to store and retrieve message as a user  
 
-5b. Run class de.uni.trier.infsec.cloudStorage.ClientRetrieveApp
-	with parameters <user_id [int]> <label [String]>
+5b.1 Run class de.uni.trier.infsec.cloudStorage.ClientStoreApp
+	 with parameters <user_id [int]> <label [String]> <msg [String]>
     
-    To allow an user to retrieve the message stored on the server under the specific label.
+     To allow an user to store a message on the server under a specific label.
+
+5b.2 Run class de.uni.trier.infsec.cloudStorage.ClientRetrieveApp
+	 with parameters <user_id [int]> <label [String]>
+    
+     To allow an user to retrieve the message stored on the server under the specific label.
 
 
 
@@ -49,8 +52,10 @@ Run following commands from bin-folder of the compiled project:
 
 4. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.UserRegisterApp 101
 
-5.1. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientStoreApp 101 pwd casdasfasfafaasfsa
-5.2.  java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientRetrieveApp 101 pwd
+5a java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.UserGUI
+
+5b.1. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientStoreApp 101 pwd casdasfasfafaasfsa
+5b.2.  java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientRetrieveApp 101 pwd
 
 
 In order to delete the files created, delete the directory %TEMP%/CloudStorage and %TEMP%/PKIServer.db
