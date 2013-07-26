@@ -20,8 +20,11 @@ import javax.swing.DefaultComboBoxModel;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseListener;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+
 import javax.swing.SwingConstants;
 import java.awt.Font;
 
@@ -41,6 +44,9 @@ import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import javax.swing.JTextArea;
 import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.Toolkit;
 
 
 
@@ -99,6 +105,7 @@ public class UserGUI extends JFrame {
 	 * Create the frame.
 	 */
 	public UserGUI() {
+		setIconImage(Toolkit.getDefaultToolkit().getImage(UserGUI.class.getResource("/de/uni/trier/infsec/cloudStorage/cloud.png")));
 		setTitle("User - Cloud Storage 2013");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 489, 334);
@@ -407,7 +414,17 @@ public class UserGUI extends JFrame {
 		
 		
 		textMsgRetrieved = new JTextArea();
+		textMsgRetrieved.addMouseListener(new MouseAdapter() {
+			public void mouseEntered(MouseEvent e) {
+				setCursor(new Cursor(Cursor.TEXT_CURSOR));
+			}
+			public void mouseExited(MouseEvent e) {
+				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+			}
+		});
 		textMsgRetrieved.setEditable(false);
+		
+		
 		JScrollPane scrollMsgRetrieved = new JScrollPane(textMsgRetrieved);
 		
 		
@@ -419,28 +436,26 @@ public class UserGUI extends JFrame {
 					.addContainerGap()
 					.addGroup(gl_retrievePanel.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_retrievePanel.createSequentialGroup()
-							.addComponent(lblMessageRetrieved)
-							.addContainerGap(336, Short.MAX_VALUE))
-						.addGroup(gl_retrievePanel.createSequentialGroup()
-							.addGroup(gl_retrievePanel.createParallelGroup(Alignment.TRAILING)
-								.addComponent(scrollMsgRetrieved, GroupLayout.PREFERRED_SIZE, 421, GroupLayout.PREFERRED_SIZE)
-								.addGroup(gl_retrievePanel.createSequentialGroup()
-									.addComponent(lblRetrieveStatus, GroupLayout.PREFERRED_SIZE, 242, GroupLayout.PREFERRED_SIZE)
-									.addGap(86)
-									.addComponent(btnRetrieve)))
-							.addGap(56))))
+							.addGroup(gl_retrievePanel.createParallelGroup(Alignment.LEADING)
+								.addComponent(lblRetrieveStatus, GroupLayout.PREFERRED_SIZE, 242, GroupLayout.PREFERRED_SIZE)
+								.addComponent(lblMessageRetrieved))
+							.addGap(86)
+							.addComponent(btnRetrieve))
+						.addComponent(scrollMsgRetrieved, GroupLayout.PREFERRED_SIZE, 421, GroupLayout.PREFERRED_SIZE))
+					.addContainerGap(56, Short.MAX_VALUE))
 		);
 		gl_retrievePanel.setVerticalGroup(
 			gl_retrievePanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_retrievePanel.createSequentialGroup()
 					.addGroup(gl_retrievePanel.createParallelGroup(Alignment.BASELINE)
 						.addComponent(btnRetrieve)
-						.addComponent(lblRetrieveStatus, GroupLayout.PREFERRED_SIZE, 39, GroupLayout.PREFERRED_SIZE))
-					.addGap(18)
-					.addComponent(lblMessageRetrieved)
-					.addGap(18)
+						.addGroup(gl_retrievePanel.createSequentialGroup()
+							.addComponent(lblRetrieveStatus, GroupLayout.PREFERRED_SIZE, 39, GroupLayout.PREFERRED_SIZE)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(lblMessageRetrieved)))
+					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(scrollMsgRetrieved, GroupLayout.PREFERRED_SIZE, 103, GroupLayout.PREFERRED_SIZE)
-					.addGap(31))
+					.addGap(55))
 		);
 		
 		retrievePanel.setLayout(gl_retrievePanel);
