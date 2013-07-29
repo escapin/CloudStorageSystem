@@ -38,7 +38,7 @@ public class Client {
 		this.userID = userID;
 		this.net=net;
 		
-		lastCounter = new LabelList(); // for each label maintains the last counter
+		lastCounter = new LabelList(); // for each label maintains the last counter 
 		nonceGen = new NonceGen();
 	}
 
