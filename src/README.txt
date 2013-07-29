@@ -1,3 +1,11 @@
+Prerequisites:
+	Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files
+	
+	 To download and apply the JCE, see at the bottom of this page:
+	 	http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+
+
 How-To run the StorageSystem process:
 
  1. Run class de.uni.trier.infsec.functionalities.pki.real.PKIServerApp
