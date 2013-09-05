@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.environment.crypto;
+package de.uni.trier.infsec.lib.crypto;
 
 import de.uni.trier.infsec.environment.Environment;
 
