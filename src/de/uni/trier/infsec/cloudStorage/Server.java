@@ -3,45 +3,44 @@ package de.uni.trier.infsec.cloudStorage;
 import java.util.Arrays;
 
 import de.uni.trier.infsec.lib.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.real.*;
-import de.uni.trier.infsec.functionalities.pki.real.PKIEnc.Decryptor;
-import de.uni.trier.infsec.functionalities.pki.real.PKISig.Signer;
+import de.uni.trier.infsec.functionalities.pkienc.*; 
+import de.uni.trier.infsec.functionalities.pkisig.*;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class Server{
-	
-	private static PKIEnc.Decryptor server_decr;
-	private static PKISig.Signer server_sign;
+
+	private static Decryptor server_decr;
+	private static Signer server_sign;
 	private static StorageDB msgStorage;
-	
-	public static void init() throws NetworkError, PKIError {
-		server_decr = new PKIEnc.Decryptor();
-		PKIEnc.registerEncryptor(server_decr.getEncryptor(), Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
-		server_sign = new PKISig.Signer();
-		PKISig.registerVerifier(server_sign.getVerifier(), Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
+
+	public static void init() throws NetworkError, RegisterEnc.PKIError, RegisterSig.PKIError {
+		server_decr = new Decryptor();
+		RegisterEnc.registerEncryptor(server_decr.getEncryptor(), Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
+		server_sign = new Signer();
+		RegisterSig.registerVerifier(server_sign.getVerifier(), Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
 		msgStorage = new StorageDB(Params.STORAGE_DB);
 	}
-	
+
 	public static void init(Decryptor decr, Signer sign) {
 		server_decr=decr;
 		server_sign=sign;
 		msgStorage = new StorageDB(Params.STORAGE_DB);
 	}
-	
+
 	/**
 	 * Process every request coming from a client and reply with the proper response 
 	 */
-	public static byte[] processRequest(byte[] request) throws MalformedMessage, NetworkError, PKIError {
+	public static byte[] processRequest(byte[] request) throws MalformedMessage, NetworkError, RegisterEnc.PKIError, RegisterSig.PKIError {
 		/*
 		 * Every request has this shape:
 		 * 		Enc_Server{ (clientID, ([payload], signClient)) }
 		 * 
 		 * where 'signClient' is the signature of the payload made by the client		
 		 */
-		
+
 		// decrypt the request 
 		byte[] id_payload_signClient = server_decr.decrypt(request);
-		
+
 		byte[] id = MessageTools.first(id_payload_signClient);
 		if(id.length!=4) // since clientID is supposed to be a integer, its length must be 4 bytes
 			throw new MalformedMessage();
@@ -50,10 +49,10 @@ public class Server{
 		byte[] payload = MessageTools.first(payload_signClient);
 		byte[] signClient=MessageTools.second(payload_signClient);
 		// verify that the message comes from the client 'clientID'
-		PKISig.Verifier clientVerifier = PKISig.getVerifier(userID, Params.PKI_DSIG_DOMAIN);
+		Verifier clientVerifier = RegisterSig.getVerifier(userID, Params.PKI_DSIG_DOMAIN);
 		if(!clientVerifier.verify(signClient, payload))
 			throw new MalformedMessage();
-		
+
 		// analyze the request tag
 		byte[] tag = MessageTools.first(payload);
 		byte[] payloadResp;
@@ -67,7 +66,7 @@ public class Server{
 			payloadResp = getLastCounter(userID, MessageTools.second(payload));
 		else
 			throw new MalformedMessage();
-		
+
 		/*
 		 * The shape of the response must be:
 		 * 		Enc_client{ ((signClient, [payloadResp]), signServer) }
@@ -79,13 +78,13 @@ public class Server{
 		// sign the message with the server private key
 		byte[] signServer = server_sign.sign(signClient_payloadResp);
 		byte[] msgSigned = MessageTools.concatenate(signClient_payloadResp, signServer);
-		
+
 		// encrypt the message for the client and return it
-		PKIEnc.Encryptor clientEncryptor = PKIEnc.getEncryptor(userID, Params.PKI_ENC_DOMAIN);
-		
+		Encryptor clientEncryptor = RegisterEnc.getEncryptor(userID, Params.PKI_ENC_DOMAIN);
+
 		return clientEncryptor.encrypt(msgSigned);
 	}
-	
+
 	/**
 	 * Try to store the message and reply:
 	 * - (STORE_OK, emptyMessage):	the message has been stored correctly
@@ -112,8 +111,8 @@ public class Server{
 		byte[] emptyMessage = {};
 		return MessageTools.concatenate(Params.STORE_OK, emptyMessage);
 	}
-	
-	
+
+
 	/**
 	 * Try to retrieve the message indexed with (userID, label, counter) and reply:
 	 * - (RETRIEVE_OK, (encMsg, signEncrMsg)):	the message and the signature of it when it was sent to the server 
@@ -136,7 +135,7 @@ public class Server{
 		echo("[User " + userID + "]  " + "Message under the label '" + new String(label) + "' retrieved!");
 		return MessageTools.concatenate(Params.RETRIEVE_OK, msg_sign);
 	}
-	
+
 	/**
 	 * Provide the last counter associated to an (userID, label) and reply:
 	 * (LAST_COUNTER, (lastCounter, nonce)): the highest counter associated with the (userID, label) 	 
@@ -152,18 +151,17 @@ public class Server{
 		byte[] lastCounter_nonce=MessageTools.concatenate(MessageTools.intToByteArray(lastCounter), nonce);
 		return MessageTools.concatenate(Params.LAST_COUNTER, lastCounter_nonce);
 	}
-	
+
 	/**
 	 * Exception thrown when the request we received does not conform
 	 * to an expected format (we get, for instance, a trash message). 
 	 */
 	@SuppressWarnings("serial")
 	public static class MalformedMessage extends Exception {}
-	
+
 	private static void echo(String txt) {
 		// if (!Boolean.parseBoolean(System.getProperty("DEBUG"))) return;
 		System.out.println(txt);
 	}
 
-	
 }

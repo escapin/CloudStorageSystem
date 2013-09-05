@@ -8,12 +8,11 @@ import org.junit.Test;
 import de.uni.trier.infsec.cloudStorage.*;
 import de.uni.trier.infsec.cloudStorage.Client.CounterOutOfDate;
 import de.uni.trier.infsec.cloudStorage.Server.MalformedMessage;
-import de.uni.trier.infsec.functionalities.pki.real.PKI;
-import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;
-import de.uni.trier.infsec.functionalities.pki.real.PKISig;
-import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
+import de.uni.trier.infsec.functionalities.pki.PKI;
+import de.uni.trier.infsec.functionalities.pki.PKIServerCore;
+import de.uni.trier.infsec.functionalities.pkienc.*;
+import de.uni.trier.infsec.functionalities.pkisig.*;
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 import de.uni.trier.infsec.lib.network.NetworkError;
 
 public class CloudStorageTest extends TestCase {
@@ -35,21 +34,21 @@ public class CloudStorageTest extends TestCase {
 		// CLIENT 01
 		int userID01=101;
 		SymEnc symenc01 = new SymEnc();
-		PKIEnc.Decryptor decryptor01 = new PKIEnc.Decryptor();
-		PKISig.Signer signer01 = new PKISig.Signer();
+		Decryptor decryptor01 = new Decryptor();
+		Signer signer01 = new Signer();
 		// register the client to the PKIEnc domain
-		PKIEnc.registerEncryptor(decryptor01.getEncryptor(), userID01, Params.PKI_ENC_DOMAIN);
-		PKISig.registerVerifier(signer01.getVerifier(), userID01, Params.PKI_DSIG_DOMAIN);
+		RegisterEnc.registerEncryptor(decryptor01.getEncryptor(), userID01, Params.PKI_ENC_DOMAIN);
+		RegisterSig.registerVerifier(signer01.getVerifier(), userID01, Params.PKI_DSIG_DOMAIN);
 		Client client01 = new Client(userID01, symenc01, decryptor01, signer01, network);
 		
 		// CLIENT 02
 		int userID02=102;
 		SymEnc symenc02 = new SymEnc();
-		PKIEnc.Decryptor decryptor02 = new PKIEnc.Decryptor();
-		PKISig.Signer signer02 = new PKISig.Signer();
+		Decryptor decryptor02 = new Decryptor();
+		Signer signer02 = new Signer();
 		// register the client to the PKIEnc domain
-		PKIEnc.registerEncryptor(decryptor02.getEncryptor(), userID02, Params.PKI_ENC_DOMAIN);
-		PKISig.registerVerifier(signer02.getVerifier(), userID02, Params.PKI_DSIG_DOMAIN);
+		RegisterEnc.registerEncryptor(decryptor02.getEncryptor(), userID02, Params.PKI_ENC_DOMAIN);
+		RegisterSig.registerVerifier(signer02.getVerifier(), userID02, Params.PKI_DSIG_DOMAIN);
 		Client client02 = new Client(userID02, symenc02, decryptor02, signer02, network);
 		
 		
@@ -87,11 +86,11 @@ public class CloudStorageTest extends TestCase {
 		// CLIENT 03
 		int userID03=103;
 		SymEnc symenc03 = new SymEnc();
-		PKIEnc.Decryptor decryptor03 = new PKIEnc.Decryptor();
-		PKISig.Signer signer03 = new PKISig.Signer();
+		Decryptor decryptor03 = new Decryptor();
+		Signer signer03 = new Signer();
 		// register the client to the PKIEnc domain
-		PKIEnc.registerEncryptor(decryptor03.getEncryptor(), userID03, Params.PKI_ENC_DOMAIN);
-		PKISig.registerVerifier(signer03.getVerifier(), userID03, Params.PKI_DSIG_DOMAIN);
+		RegisterEnc.registerEncryptor(decryptor03.getEncryptor(), userID03, Params.PKI_ENC_DOMAIN);
+		RegisterSig.registerVerifier(signer03.getVerifier(), userID03, Params.PKI_DSIG_DOMAIN);
 		Client client03 = new Client(userID03, symenc03, decryptor03, signer03, network);
 		
 		// 
@@ -130,7 +129,7 @@ public class CloudStorageTest extends TestCase {
 		public byte[] sendRequest(byte[] msg) throws NetworkError{
 				try {
 					return Server.processRequest(msg);
-				} catch (MalformedMessage | PKIError e) {
+				} catch (MalformedMessage | RegisterEnc.PKIError | RegisterSig.PKIError e) {
 					e.printStackTrace();
 				}
 				return null;

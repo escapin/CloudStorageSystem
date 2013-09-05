@@ -6,16 +6,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import de.uni.trier.infsec.cloudStorage.Client.CounterOutOfDate;
-import de.uni.trier.infsec.functionalities.pki.real.PKI;
-import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.real.PKISig;
-import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
+import de.uni.trier.infsec.functionalities.pki.PKI;
+import de.uni.trier.infsec.functionalities.pkienc.*;
+import de.uni.trier.infsec.functionalities.pkisig.*;
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 import de.uni.trier.infsec.utils.MessageTools;
 
 public class ClientStoreApp {
 
-	private static PKIEnc.Decryptor user_decr;
-	private static PKISig.Signer user_sign;
+	private static Decryptor user_decr;
+	private static Signer user_sign;
 	private static SymEnc symenc;
 	
 	private static final int STORE_ATTEMPTS = 3; 
@@ -75,12 +75,11 @@ public class ClientStoreApp {
 		byte[] sym_decr_sig = MessageTools.second(serialized);
 		symenc = new SymEnc(MessageTools.first(sym_decr_sig));
 		byte[] decr_sign = MessageTools.second(sym_decr_sig);
-		user_decr = PKIEnc.decryptorFromBytes(MessageTools.first(decr_sign));
-		user_sign = PKISig.signerFromBytes(MessageTools.second(decr_sign));
-		
+		user_decr = Decryptor.fromBytes(MessageTools.first(decr_sign));
+		user_sign = Signer.fromBytes(MessageTools.second(decr_sign));
 	}
-	
-	
+
+
 	private static byte[] readFromFile(String path) throws IOException {
 		FileInputStream f = new FileInputStream(path);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -90,7 +89,5 @@ public class ClientStoreApp {
 		f.close();
 		byte[] data = bos.toByteArray();
 		return data;
-	}
-	
-	
+	}	
 }
