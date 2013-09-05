@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.environment.network;
+package de.uni.trier.infsec.lib.network;
 
 import de.uni.trier.infsec.environment.Environment;
 

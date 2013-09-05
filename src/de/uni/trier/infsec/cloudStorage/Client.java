@@ -2,22 +2,21 @@ package de.uni.trier.infsec.cloudStorage;
 
 import java.util.*;
 
-import de.uni.trier.infsec.functionalities.nonce.ideal.NonceGen;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
-import de.uni.trier.infsec.functionalities.symenc.ideal.SymEnc;
-import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.functionalities.nonce.NonceGen;
+import de.uni.trier.infsec.functionalities.pkisig.*;
+import de.uni.trier.infsec.functionalities.pkienc.*;
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
+import de.uni.trier.infsec.lib.network.NetworkError;
 import de.uni.trier.infsec.utils.*;
 
 public class Client {
 	
 	private SymEnc symenc;
-	private PKIEnc.Decryptor decryptor;
-	private PKISig.Signer signer;
-	private PKISig.Verifier verifier;
-	private PKIEnc.Encryptor server_enc;
-	private PKISig.Verifier server_ver;
+	private Decryptor decryptor;
+	private Signer signer;
+	private Verifier verifier;
+	private Encryptor server_enc;
+	private Verifier server_ver;
 
 	private int userID;
 	private LabelList lastCounter;
@@ -25,13 +24,14 @@ public class Client {
 
 	private NetworkInterface net;
 
-	public Client(int userID, SymEnc symenc, PKIEnc.Decryptor decryptor, PKISig.Signer signer, NetworkInterface net) throws PKIError, NetworkError {
+	public Client(int userID, SymEnc symenc, Decryptor decryptor, Signer signer, NetworkInterface net) 
+				  throws RegisterEnc.PKIError, RegisterSig.PKIError, NetworkError {
 		this.symenc = symenc;
 		this.decryptor = decryptor;
 		this.signer = signer;
 		this.verifier = signer.getVerifier();
-		this.server_enc = PKIEnc.getEncryptor(Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
-		this.server_ver = PKISig.getVerifier(Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
+		this.server_enc = RegisterEnc.getEncryptor(Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
+		this.server_ver = RegisterSig.getVerifier(Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
 		this.userID = userID;
 		this.net=net;
 		

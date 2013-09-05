@@ -1,7 +1,8 @@
-package de.uni.trier.infsec.functionalities.symenc.ideal;
+package de.uni.trier.infsec.functionalities.symenc;
 
 import de.uni.trier.infsec.utils.MessageTools;
-import de.uni.trier.infsec.environment.crypto.CryptoLib;
+import de.uni.trier.infsec.lib.crypto.CryptoLib;
+import de.uni.trier.infsec.utils.MessageTools;
 
 /**
  * Ideal functionality for private symmetric key encrytpion. 
