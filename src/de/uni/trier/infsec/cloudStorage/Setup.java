@@ -1,11 +1,10 @@
 package de.uni.trier.infsec.cloudStorage;
 
 import de.uni.trier.infsec.environment.Environment;
-import de.uni.trier.infsec.environment.network.NetworkError;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIError;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKISig;
-import de.uni.trier.infsec.functionalities.pki.idealcor.PKIEnc;
-import de.uni.trier.infsec.functionalities.symenc.ideal.SymEnc;
+import de.uni.trier.infsec.lib.network.NetworkError;
+import de.uni.trier.infsec.functionalities.pkienc.*;
+import de.uni.trier.infsec.functionalities.pkisig.*;
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 
 /**
  * A setup for modeling one honest client interacting with possibly dishonest server
@@ -25,15 +24,18 @@ public class Setup {
 		// (we consider one honest client; the remaining clients will be subsumed 
 		// by the adversary)
 		SymEnc client_symenc = new SymEnc();
-		PKIEnc.Decryptor client_decryptor = new PKIEnc.Decryptor();
-		PKISig.Signer client_signer = new PKISig.Signer();
+		Decryptor client_decryptor = new Decryptor();
+		Signer client_signer = new Signer();
 		Client client = null;
 		try {
-			PKIEnc.registerEncryptor(client_decryptor.getEncryptor(), HONEST_CLIENT_ID, Params.PKI_ENC_DOMAIN);
-			PKISig.registerVerifier(client_signer.getVerifier(), HONEST_CLIENT_ID, Params.PKI_DSIG_DOMAIN);
+			RegisterEnc.registerEncryptor(client_decryptor.getEncryptor(), HONEST_CLIENT_ID, Params.PKI_ENC_DOMAIN);
+			RegisterSig.registerVerifier(client_signer.getVerifier(), HONEST_CLIENT_ID, Params.PKI_DSIG_DOMAIN);
 			client = new Client(HONEST_CLIENT_ID, client_symenc, client_decryptor, client_signer, new NetworkReal());
 		} 
-		catch (PKIError e) { // registration failed -- id already registered
+		catch (RegisterEnc.PKIError e) { // encryptor registration failed -- id already registered
+			return;
+		}
+		catch (RegisterSig.PKIError e) { // verifier registration failed -- id already registered
 			return;
 		}
 		catch (NetworkError e) { // registration failed -- problems with the connection
@@ -73,9 +75,9 @@ public class Setup {
 			case 2: // registering a corrupted encryptor
 				byte[] pub_key = Environment.untrustedInputMessage();
 				int enc_id = Environment.untrustedInput();
-				PKIEnc.Encryptor corrupted_encryptor = new PKIEnc.Encryptor(pub_key);
+				Encryptor corrupted_encryptor = new Encryptor(pub_key);
 				try {
-					PKIEnc.registerEncryptor(corrupted_encryptor, enc_id, Params.PKI_ENC_DOMAIN);
+					RegisterEnc.registerEncryptor(corrupted_encryptor, enc_id, Params.PKI_ENC_DOMAIN);
 				}
 				catch (Exception e) {}
 				break;
@@ -83,9 +85,9 @@ public class Setup {
 			case 3: // registering a corrupted verifier
 				byte[] verif_key = Environment.untrustedInputMessage();
 				int verif_id = Environment.untrustedInput();
-				PKISig.Verifier corrupted_verifier = new PKISig.Verifier(verif_key);
+				Verifier corrupted_verifier = new Verifier(verif_key);
 				try {
-					PKISig.registerVerifier(corrupted_verifier, verif_id, Params.PKI_DSIG_DOMAIN);
+					RegisterSig.registerVerifier(corrupted_verifier, verif_id, Params.PKI_DSIG_DOMAIN);
 				}
 				catch (Exception e) {}
 				break;

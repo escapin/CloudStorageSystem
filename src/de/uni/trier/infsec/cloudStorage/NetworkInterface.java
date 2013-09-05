@@ -1,6 +1,6 @@
 package de.uni.trier.infsec.cloudStorage;
 
-import de.uni.trier.infsec.environment.network.NetworkError;
+import de.uni.trier.infsec.lib.network.NetworkError;
 
 /**
  * Interface to handle both test and real network implementations.
