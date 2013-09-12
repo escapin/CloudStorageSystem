@@ -1,13 +1,10 @@
 To be put in the  'lib' subfolder:
-
-	antlr-runtime-3.4.jar'
-	bcprov-jdk15on-147.jar'
-	bcprov-jdk16-146.jar'
-	bctest-jdk15on-147.jar'
-	beansbinding-1.2.1.jar'
-	junit-4.8.2.jar'
-	miglayout15-swing.jar'
-	sqlite-jdbc-3.7.2.jar'
-	sqljet-1.1.6.jar'
-
-   
+	antlr-runtime-3.4.jar
+	bcprov-jdk15on-147.jar
+	bcprov-jdk16-146.jar
+	bctest-jdk15on-147.jar
+	beansbinding-1.2.1.jar
+	junit-4.8.2.jar
+	miglayout15-swing.jar
+	sqlite-jdbc-3.7.2.jar
+	sqljet-1.1.6.jar
