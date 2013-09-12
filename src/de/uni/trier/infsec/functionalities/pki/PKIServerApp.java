@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.functionalities.pki.real;
+package de.uni.trier.infsec.functionalities.pki;
 
 import static de.uni.trier.infsec.utils.MessageTools.concatenate;
 import static de.uni.trier.infsec.utils.MessageTools.first;
@@ -31,7 +31,7 @@ public class PKIServerApp {
 	public static final byte[] MSG_ERROR_PKI 			= new byte[]{0x06, 0x0F, 0x0D, 0x0E};
 	public static final byte[] MSG_ERROR_NETWORK		= new byte[]{0x05, 0x0F, 0x0D, 0x0E};
 	
-	public static final int LISTEN_PORT = 7071;
+	public static final int LISTEN_PORT = 7077;
 	
 	private PKIServerApp() {
 	}
@@ -67,7 +67,7 @@ public class PKIServerApp {
 				out.payload = MessageTools.concatenate(request.payload, key);
 				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
 				return out;
-			} catch (PKIError e) {
+			} catch (PKI.Error e) {
 				echo("Key has not been registered!");
 				PKIMessage out = new PKIMessage();
 				out.nonce = request.nonce;
@@ -93,7 +93,7 @@ public class PKIServerApp {
 				out.nonce = request.nonce;
 				out.signature = CryptoLib.sign(out.bytesForSign(), Utilities.hexStringToByteArray(SigningKey));
 				return out;
-			} catch (PKIError p) {
+			} catch (PKI.Error p) {
 				echo("Key has already been claimed!");
 				PKIMessage out = new PKIMessage();
 				out.nonce = request.nonce;

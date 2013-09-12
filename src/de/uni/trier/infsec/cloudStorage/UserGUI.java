@@ -35,11 +35,10 @@ import java.io.IOException;
 
 import de.uni.trier.infsec.cloudStorage.Client.CounterOutOfDate;
 import de.uni.trier.infsec.cloudStorage.Client.StorageError;
-import de.uni.trier.infsec.functionalities.pki.real.PKI;
-import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
-import de.uni.trier.infsec.functionalities.pki.real.PKISig;
-import de.uni.trier.infsec.functionalities.pki.real.PKIError;
-import de.uni.trier.infsec.functionalities.symenc.real.SymEnc;
+import de.uni.trier.infsec.functionalities.pki.PKI;
+import de.uni.trier.infsec.functionalities.pkienc.*;
+import de.uni.trier.infsec.functionalities.pkisig.*;
+import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.lib.network.NetworkError;
 import javax.swing.JTextArea;
@@ -71,8 +70,8 @@ public class UserGUI extends JFrame {
 	 * CORE FIELD
 	 */
 	private int userID;
-	private PKIEnc.Decryptor user_decr;
-	private PKISig.Signer user_sign;
+	private Decryptor user_decr;
+	private Signer user_sign;
 	private SymEnc symenc;
 	private Client client;
 	private static final int STORE_ATTEMPTS = 3; 
@@ -200,7 +199,7 @@ public class UserGUI extends JFrame {
 				} catch (IOException e){
 					System.out.println("IOException occurred while reading the credentials of the user!");
 					lblUserNotRegister.setText("IOException occurred while reading the credentials of the user!");
-				} catch (PKIError e){
+				} catch (RegisterSig.PKIError | RegisterEnc.PKIError e){
 					System.out.println("PKI Error occurred: perhaps the PKI server is not running!");
 					lblUserNotRegister.setText("<html>PKI Error:<br> perhaps the PKI server is not running!</html>");
 				} catch (NetworkError e){
@@ -523,7 +522,7 @@ public class UserGUI extends JFrame {
 	/*
 	 * CORE CODE
 	 */
-	private void setupClient(int userID) throws IOException, PKIError, NetworkError{
+	private void setupClient(int userID) throws IOException, RegisterEnc.PKIError, RegisterSig.PKIError, NetworkError {
 		System.setProperty("remotemode", Boolean.toString(true));
 		PKI.useRemoteMode();
 		
@@ -532,8 +531,8 @@ public class UserGUI extends JFrame {
 		byte[] sym_decr_sig = MessageTools.second(serialized);
 		symenc = new SymEnc(MessageTools.first(sym_decr_sig));
 		byte[] decr_sign = MessageTools.second(sym_decr_sig);
-		user_decr = PKIEnc.decryptorFromBytes(MessageTools.first(decr_sign));
-		user_sign = PKISig.signerFromBytes(MessageTools.second(decr_sign));
+		user_decr = Decryptor.fromBytes(MessageTools.first(decr_sign));
+		user_sign = Signer.fromBytes(MessageTools.second(decr_sign));
 		
 		NetworkInterface network = new NetworkReal();
 		client = new Client(userID, symenc, user_decr, user_sign, network);
