@@ -190,9 +190,9 @@ public class Client {
 		// pick a nonce
 		byte[] nonce = nonceGen.nextNonce();
 		byte[] label_nonce=MessageTools.concatenate(label, nonce);
-		byte[] store_label_nonce=MessageTools.concatenate(Params.GET_COUNTER, label_nonce);
+		byte[] getCounter_label_nonce=MessageTools.concatenate(Params.GET_COUNTER, label_nonce);
 				
-		ServerResponse response = sendPayloadToServer(store_label_nonce);
+		ServerResponse response = sendPayloadToServer(getCounter_label_nonce);
 				
 		// analyze the response tag
 		if(!Arrays.equals(response.tag, Params.LAST_COUNTER))
