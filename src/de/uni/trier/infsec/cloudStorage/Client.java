@@ -108,6 +108,7 @@ public class Client {
 		// throw new StoreFailure(); 
 		// This exception may be thrown if several clients try to store 
 		// concurrently a message into the server with the same label.
+		
 	}
 
 	/**
