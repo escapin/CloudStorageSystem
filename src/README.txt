@@ -8,7 +8,7 @@ Prerequisites:
 
 How-To run the StorageSystem process:
 
- 1. Run class de.uni.trier.infsec.functionalities.pki.real.PKIServerApp
+ 1. Run class de.uni.trier.infsec.functionalities.pki.PKIServerApp
 
     This starts the public key environment which is needed for
     registration and lookup of public and verification keys.  The
@@ -31,7 +31,7 @@ How-To run the StorageSystem process:
 
     This will run registration process for the user with that user_id. It will
     register its keys at the PKI environment and store the serialized
-    keys to folder %TEMP%/CluodStorag/user$(user_id).info
+    keys to folder %TEMP%/CloudStorage/user$(user_id).info
     
 5a  Run class de.uni.trier.infsec.cloudStorage.UserGUI
 	to start the application which allows to store and retrieve message as a user  
@@ -53,7 +53,7 @@ EXAMPLE:
 
 Run following commands from bin-folder of the compiled project:
 
-1. java -cp ".:../lib/*" de.uni.trier.infsec.functionalities.pki.real.PKIServerApp
+1. java -cp ".:../lib/*" de.uni.trier.infsec.functionalities.pki.PKIServerApp
 
 2. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ServerRegisterApp
 3. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ServerApp
