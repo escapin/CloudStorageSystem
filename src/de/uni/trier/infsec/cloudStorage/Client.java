@@ -185,7 +185,7 @@ public class Client {
 	 */
 	private int getServerLastCounter(byte[] label) throws NetworkError, StorageError {
 		// pick a nonce
-		byte[] nonce = nonceGen.nextNonce();
+		byte[] nonce = nonceGen.newNonce();
 		byte[] label_nonce=MessageTools.concatenate(label, nonce);
 		byte[] getCounter_label_nonce=MessageTools.concatenate(Params.GET_COUNTER, label_nonce);
 				
