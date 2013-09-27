@@ -18,6 +18,7 @@ public class ServerRegisterApp {
 	public static void main(String[] args) {		
 		System.setProperty("remotemode", Boolean.toString(true));
 		ServerRegisterApp.registerAndSave();
+		System.out.println("Cloud Storage server registered!");
 	}
 
 	private static void registerAndSave(){
