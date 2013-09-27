@@ -10,7 +10,7 @@ How-To run the StorageSystem process:
 
  1. Run class de.uni.trier.infsec.functionalities.pki.PKIServerApp
 
-    This starts the public key environment which is needed for
+    This class starts the public key environment which is needed for
     registration and lookup of public and verification keys.  The
     PKIServer stores the registered keys at %TEMP%PKI_server.db -
     if you want to delete registered keys, you will have to delete this
@@ -18,7 +18,7 @@ How-To run the StorageSystem process:
 
  2. Run class de.uni.trier.infsec.cloudStorage.ServerRegisterApp
 
-    This will run the server registration process. Server will
+    This class will run the server registration process. Server will
     register its keys at the PKI environment and store the serialized
     keys to folder %TEMP%/CloudStorage/server.info
 
@@ -34,17 +34,19 @@ How-To run the StorageSystem process:
     keys to folder %TEMP%/CloudStorage/user$(user_id).info
     
 5a  Run class de.uni.trier.infsec.cloudStorage.UserGUI
-	to start the application which allows to store and retrieve message as a user  
+	to start the application which allows to store and retrieve message as a pre-registered user  
 
 5b.1 Run class de.uni.trier.infsec.cloudStorage.ClientStoreApp
 	 with parameters <user_id [int]> <label [String]> <msg [String]>
     
-     To allow an user to store a message on the server under a specific label.
+     This class allows an user to store a message on the server under a specific label,
+     by command line interface.
 
 5b.2 Run class de.uni.trier.infsec.cloudStorage.ClientRetrieveApp
 	 with parameters <user_id [int]> <label [String]>
     
-     To allow an user to retrieve the message stored on the server under the specific label.
+     This class allows an user to retrieve the message stored on the server under the specific label,
+     by command line interface.
 
 
 
