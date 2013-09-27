@@ -54,6 +54,7 @@ public class StorageDB {
 	 * If the (userID, label, counter) has already been used, throw an SQL exception
 	 */
 	public void insert(int userID, byte[] label, int counter, byte[] msg, byte[] msgSign){
+		//TODO: prevent SQL injection
 		try {
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			// Creates a Statement object for sending SQL statements to the database
@@ -80,6 +81,7 @@ public class StorageDB {
 	 * null otherwise
 	 */
 	public byte[] getMessage(int userID, byte[] label, int counter){
+		//TODO: prevent SQL injection
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			// Creates a Statement object for sending SQL statements to the database
@@ -110,6 +112,7 @@ public class StorageDB {
 	 * null otherwise
 	 */
 	public byte[] getSignature(int userID, byte[] label, int counter){
+		//TODO: prevent SQL injection
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			// Creates a Statement object for sending SQL statements to the database
@@ -140,6 +143,7 @@ public class StorageDB {
 	 * -1 otherwise
 	 */
 	public int getLastCounter(int userID, byte[] label){
+		//TODO: prevent SQL injection
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			// Creates a Statement object for sending SQL statements to the database

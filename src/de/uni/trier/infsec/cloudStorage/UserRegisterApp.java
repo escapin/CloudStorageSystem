@@ -28,6 +28,7 @@ public class UserRegisterApp {
 				System.exit(0);
 			}
 			UserRegisterApp.register(userID);
+			System.out.println("User " + userID + " registered!");
 		}
 	}	
 
@@ -55,7 +56,6 @@ public class UserRegisterApp {
 		byte[] serialized = MessageTools.concatenate(id, sym_decr_sig);
 		try {
 			storeAsFile(serialized, Params.PATH_USER + "user" + userID + ".info");
-			System.out.println("User " + userID + " registered!");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);

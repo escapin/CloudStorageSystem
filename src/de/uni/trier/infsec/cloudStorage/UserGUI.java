@@ -167,7 +167,7 @@ public class UserGUI extends JFrame {
 		btnLogIn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
 				if(textField.getText().length()==0){
-					lblUserNotRegister.setText("<html>User ID field empty!<br>Please insert an ID number of a registered user.</html>");
+					lblUserNotRegister.setText("<html>User ID field empty!<br>Please insert a valid ID number of a previously registered user.</html>");
 					return;
 				}
 				
@@ -195,7 +195,7 @@ public class UserGUI extends JFrame {
 					userRegistered=true;
 				} catch (FileNotFoundException e){
 					System.out.println("User " + userID + " not registered!\nType \'UserRegisterApp <user_id [int]>\' in a terminal to register him/her.");
-					lblUserNotRegister.setText("<html>User " + userID + " not registered!<br>Type \'UserRegisterApp &lt;user_id [int]&gt;\' in a terminal to register him/her.</html>");
+					lblUserNotRegister.setText("<html>User " + userID + " not registered!<br>Please register yourself before log in.</html>");
 				} catch (IOException e){
 					System.out.println("IOException occurred while reading the credentials of the user!");
 					lblUserNotRegister.setText("IOException occurred while reading the credentials of the user!");
@@ -291,7 +291,7 @@ public class UserGUI extends JFrame {
 					return;
 				}
 				if(msgToStore.getText().length()==0){
-					lblStoreStatus.setText("Message to store empty!");
+					lblStoreStatus.setText("Message to store is empty!");
 					return;
 				}
 				
