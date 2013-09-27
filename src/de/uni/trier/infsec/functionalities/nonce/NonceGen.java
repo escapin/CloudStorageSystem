@@ -12,7 +12,7 @@ public class NonceGen {
 	public NonceGen() {
 	}
 
-	public byte[] nextNonce() {
+	public byte[] newNonce() {
 		byte[] nonce = null;
 		// keep asking for a nonce until we get a fresh value
 		while( nonce==null || log.contains(nonce) ) {
