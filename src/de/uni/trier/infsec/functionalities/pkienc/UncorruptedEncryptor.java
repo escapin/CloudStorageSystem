@@ -1,7 +1,6 @@
 package de.uni.trier.infsec.functionalities.pkienc;
 
-import static de.uni.trier.infsec.utils.MessageTools.copyOf;
-import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
+import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 
@@ -22,10 +21,10 @@ public final class UncorruptedEncryptor extends Encryptor {
 		byte[] randomCipher = null;
 		// keep asking the environment for the ciphertext, until a fresh one is given:
 		while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
-			randomCipher = copyOf(CryptoLib.pke_encrypt(getZeroMessage(message.length), copyOf(publicKey)));
+			randomCipher = MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.getZeroMessage(message.length), MessageTools.copyOf(publicKey)));
 		}
-		log.add(copyOf(message), randomCipher);
-		return copyOf(randomCipher);
+		log.add(MessageTools.copyOf(message), randomCipher);
+		return MessageTools.copyOf(randomCipher);
 	}
 
 	protected Encryptor copy() {
