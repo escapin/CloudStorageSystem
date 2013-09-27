@@ -1,6 +1,6 @@
 package de.uni.trier.infsec.functionalities.pkisig;
 
-import de.uni.trier.infsec.utils.MessageTools;
+import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 public class Verifier {
@@ -15,7 +15,7 @@ public class Verifier {
 	}
 
 	public byte[] getVerifKey() {
-		return MessageTools.copyOf(verifKey);
+		return copyOf(verifKey);
 	}
 
 	protected Verifier copy() {

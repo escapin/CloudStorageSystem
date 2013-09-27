@@ -1,6 +1,7 @@
 package de.uni.trier.infsec.functionalities.symenc;
 
-import de.uni.trier.infsec.utils.MessageTools;
+import static de.uni.trier.infsec.utils.MessageTools.copyOf;
+import static de.uni.trier.infsec.utils.MessageTools.getZeroMessage;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.utils.MessageTools;
 
@@ -25,17 +26,17 @@ public class SymEnc {
 		byte[] randomCipher = null;
 		// keep asking the environment for the ciphertext, until a fresh one is given:
 		while( randomCipher==null || log.containsCiphertext(randomCipher) ) {
-			randomCipher = MessageTools.copyOf(CryptoLib.symkey_encrypt(MessageTools.copyOf(key), MessageTools.getZeroMessage(plaintext.length)));
+			randomCipher = copyOf(CryptoLib.symkey_encrypt(copyOf(key), getZeroMessage(plaintext.length)));
 		}
-		log.add(MessageTools.copyOf(plaintext), randomCipher);
-		return MessageTools.copyOf(randomCipher);		
+		log.add(copyOf(plaintext), randomCipher);
+		return copyOf(randomCipher);		
 	}
 	
 	public byte[] decrypt(byte[] ciphertext) { 
 		if (!log.containsCiphertext(ciphertext)) {
-			return MessageTools.copyOf( CryptoLib.symkey_decrypt(MessageTools.copyOf(key), MessageTools.copyOf(ciphertext)) );
+			return copyOf( CryptoLib.symkey_decrypt(copyOf(key), copyOf(ciphertext)) );
 		} else {
-			return MessageTools.copyOf( log.lookup(ciphertext) );
+			return copyOf( log.lookup(ciphertext) );
 		}			
 	}
 	

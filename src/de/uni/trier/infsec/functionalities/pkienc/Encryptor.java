@@ -1,6 +1,6 @@
 package de.uni.trier.infsec.functionalities.pkienc;
 
-import de.uni.trier.infsec.utils.MessageTools;
+import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 
 
@@ -14,11 +14,11 @@ public class Encryptor {
 	}
 
 	public byte[] encrypt(byte[] message) {
-		return MessageTools.copyOf(CryptoLib.pke_encrypt(MessageTools.copyOf(message), MessageTools.copyOf(publicKey)));
+		return copyOf(CryptoLib.pke_encrypt(copyOf(message), copyOf(publicKey)));
 	}
 
 	public byte[] getPublicKey() {
-		return MessageTools.copyOf(publicKey);
+		return copyOf(publicKey);
 	}
 
 	protected Encryptor copy() {

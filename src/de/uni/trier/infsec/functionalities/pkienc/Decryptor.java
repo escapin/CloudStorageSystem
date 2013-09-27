@@ -1,5 +1,6 @@
 package de.uni.trier.infsec.functionalities.pkienc;
 
+import static de.uni.trier.infsec.utils.MessageTools.copyOf;
 import de.uni.trier.infsec.lib.crypto.CryptoLib;
 import de.uni.trier.infsec.lib.crypto.KeyPair;
 import de.uni.trier.infsec.utils.MessageTools;
@@ -13,19 +14,19 @@ public class Decryptor {
 
 	public Decryptor() {
 		KeyPair keypair = CryptoLib.pke_generateKeyPair();
-		this.privateKey = MessageTools.copyOf(keypair.privateKey);
-		this.publicKey = MessageTools.copyOf(keypair.publicKey);
+		this.privateKey = copyOf(keypair.privateKey);
+		this.publicKey = copyOf(keypair.publicKey);
 		this.log = new EncryptionLog();
 	}
 
 	/** "Decrypts" a message by, first trying to find in in the log (and returning
 	 *   the related plaintext) and, only if this fails, by using real decryption. */
 	public byte[] decrypt(byte[] message) {
-		byte[] messageCopy = MessageTools.copyOf(message);
+		byte[] messageCopy = copyOf(message);
 		if (!log.containsCiphertext(messageCopy)) {
-			return MessageTools.copyOf( CryptoLib.pke_decrypt(MessageTools.copyOf(privateKey), messageCopy) );
+			return copyOf( CryptoLib.pke_decrypt(copyOf(privateKey), messageCopy) );
 		} else {
-			return MessageTools.copyOf( log.lookup(messageCopy) );
+			return copyOf( log.lookup(messageCopy) );
 		}
 	}
 
