@@ -1,8 +1,7 @@
 package de.uni.trier.infsec.cloudStorage;
 
 import java.io.File;
-
-
+import java.io.Reader;
 import java.sql.*;
 
 import de.uni.trier.infsec.utils.Utilities;
@@ -76,35 +75,37 @@ public class StorageDB {
 		    db.close();
 	    } catch ( Exception e ) {
 	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	      e.printStackTrace();
 	      System.exit(0);
 	    }
 	}
 		
 	
-	/**
-	 * Retrieve the message associated to the index (userID, label, index) if it's in the storage,
+	/**	
+	 * Retrieve the message associated to the index (userID, label, index) if it is in the DB,
 	 * null otherwise
 	 */
 	public byte[] getMessage(int userID, byte[] label, int counter){
-		//TODO: prevent SQL injection
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
-			// Creates a Statement object for sending SQL statements to the database
-			Statement stmt = db.createStatement();
 			/*
 			 * SELECT signature FROM msg_storage WHERE userID='userID', label='label' AND counter='counter'	
 			 */
-			String query = "SELECT * FROM " + TABLE_STORAGE + 
-					" WHERE userID='" + userID + "' AND " +
-							"label='" + Utilities.byteArrayToHexString(label) + "' AND " +
-							"counter='" + counter + "';";
-			ResultSet rs = stmt.executeQuery(query);
+			String sql = "SELECT * FROM " + TABLE_STORAGE + 
+					" WHERE userID=? AND label=? AND counter=?;";
+			// Creates a Statement object for sending SQL statements to the database
+			PreparedStatement pstmt = db.prepareStatement(sql);
+			pstmt.setInt(1, userID);
+			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setInt(3, counter);
+			
+			ResultSet rs = pstmt.executeQuery();
 			if(!rs.next()) // no rows
 				return null;
-			String sign = rs.getString("message");
-			stmt.close();
+			String msg = rs.getString("message");
+			pstmt.close();
 		    db.close();
-		    return Utilities.hexStringToByteArray(sign);
+		    return Utilities.hexStringToByteArray(msg);
 			
 		} catch ( Exception e ) {
 		      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
@@ -117,23 +118,24 @@ public class StorageDB {
 	 * null otherwise
 	 */
 	public byte[] getSignature(int userID, byte[] label, int counter){
-		//TODO: prevent SQL injection
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
-			// Creates a Statement object for sending SQL statements to the database
-			Statement stmt = db.createStatement();
 			/*
 			 * SELECT signature FROM msg_storage WHERE userID='userID', label='label' AND counter='counter'	
 			 */
-			String query = "SELECT * FROM " + TABLE_STORAGE + 
-					" WHERE userID='" + userID + "' AND " +
-							"label='" + Utilities.byteArrayToHexString(label) + "' AND " +
-							"counter='" + counter + "';";
-			ResultSet rs = stmt.executeQuery(query);
+			String sql = "SELECT * FROM " + TABLE_STORAGE + 
+					" WHERE userID=? AND label=? AND counter=?;";
+			// Creates a Statement object for sending SQL statements to the database
+			PreparedStatement pstmt = db.prepareStatement(sql);
+			pstmt.setInt(1, userID);
+			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setInt(3, counter);
+			
+			ResultSet rs = pstmt.executeQuery();
 			if(!rs.next()) // no rows
 				return null;
 			String sign = rs.getString("signature");
-			stmt.close();
+			pstmt.close();
 		    db.close();
 		    return Utilities.hexStringToByteArray(sign);
 			
@@ -148,24 +150,29 @@ public class StorageDB {
 	 * -1 otherwise
 	 */
 	public int getLastCounter(int userID, byte[] label){
-		//TODO: prevent SQL injection
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
+/*			String sql = "SELECT * FROM " + TABLE_STORAGE + 
+					" WHERE userID=? AND label=?;";
 			// Creates a Statement object for sending SQL statements to the database
-			Statement stmt = db.createStatement();
-			String query = "SELECT * FROM " + TABLE_STORAGE + 
-					" WHERE userID='" + userID + "' AND " +
-							"label='" + Utilities.byteArrayToHexString(label) + "' ;";
-			ResultSet rs = stmt.executeQuery(query);
+			PreparedStatement pstmt = db.prepareStatement(sql);
+			pstmt.setInt(1,userID);
+			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			ResultSet rs = pstmt.executeQuery();
 			if(!rs.next()) // no rows
-				return -1;
+				return -1;*/
 			// there is at least a row with the (userID, label) pair
-			query = "SELECT MAX(counter) FROM " + TABLE_STORAGE + 
-					" WHERE userID='" + userID + "' AND " +
-							"label='" + Utilities.byteArrayToHexString(label) + "' ;";
-			rs = stmt.executeQuery(query);
+			String sql = "SELECT MAX(counter) FROM " + TABLE_STORAGE + 
+					" WHERE userID=? AND label=?;";
+			PreparedStatement pstmt = db.prepareStatement(sql);
+			pstmt.setInt(1,userID);
+			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			ResultSet rs = pstmt.executeQuery();
+			Reader r = rs.getCharacterStream(1);
+			if(r!=null) // no counter under these (userID, label) pair
+				return -1;
 			int counter = rs.getInt(1);
-			stmt.close();
+			pstmt.close();
 		    db.close();
 		    return counter;
 			
