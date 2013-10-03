@@ -28,8 +28,7 @@ public class StorageDB {
 			
 			// only if the database didn't exist, create the table
 			if(!dbExist){
-				// Creates a Statement object for sending SQL statements to the database
-				Statement stmt = db.createStatement();
+				
 				// Creates 'msg_storage' table 
 				String sql = "CREATE TABLE " + TABLE_STORAGE +
 					"(userID INTEGER NOT NULL, " +
@@ -38,12 +37,18 @@ public class StorageDB {
 					"message TEXT, " +
 					"signature TEXT,  " +
 					"PRIMARY KEY (userID, label, counter));";
-				stmt.executeUpdate(sql);
+				
+				// Creates a Statement object for sending SQL statements to the database
+				Statement stmt = db.createStatement();
+				//PreparedStatement pstmt = db.prepareStatement(sql);
+				
+				stmt.execute(sql);
 				stmt.close();
 			}
 		    db.close();
-	    } catch ( Exception e ) {
+	    } catch( Exception e ) {
 	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	      e.printStackTrace();
 	      System.exit(0);
 	    }
 	    //System.out.println("Opened database successfully");
@@ -54,20 +59,20 @@ public class StorageDB {
 	 * If the (userID, label, counter) has already been used, throw an SQL exception
 	 */
 	public void insert(int userID, byte[] label, int counter, byte[] msg, byte[] msgSign){
-		//TODO: prevent SQL injection
 		try {
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
+			
+			String sql = "INSERT INTO " + TABLE_STORAGE + " (userID, label, counter, message, signature) " +
+	                   " VALUES (?,?,?,?,?);";
 			// Creates a Statement object for sending SQL statements to the database
-			Statement stmt = db.createStatement();
-			String insert = "INSERT INTO " + TABLE_STORAGE + " (userID, label, counter, message, signature) " +
-	                   " VALUES (" +
-	                   " '" + userID + "'," +
-	                   " '" + Utilities.byteArrayToHexString(label) + "'," +
-	                   " '" + counter + "'," +
-	                   " '" + Utilities.byteArrayToHexString(msg) + "'," +
-	                   " '" + Utilities.byteArrayToHexString(msgSign) + "');";
-			stmt.executeUpdate(insert);
-			stmt.close();
+			PreparedStatement pstmt = db.prepareStatement(sql);
+			pstmt.setInt(1, userID);
+			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setInt(3, counter);
+			pstmt.setString(4, Utilities.byteArrayToHexString(msg));
+			pstmt.setString(5, Utilities.byteArrayToHexString(msgSign));
+			pstmt.executeUpdate();
+			pstmt.close();
 		    db.close();
 	    } catch ( Exception e ) {
 	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
