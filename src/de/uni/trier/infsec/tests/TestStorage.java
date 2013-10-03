@@ -1,6 +1,7 @@
 package de.uni.trier.infsec.tests;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 import de.uni.trier.infsec.cloudStorage.StorageDB;
@@ -8,7 +9,7 @@ import de.uni.trier.infsec.cloudStorage.StorageDB;
 // TODO: convert it into a test case
 
 public class TestStorage {
-	public static void main(String[] args){
+	public static void main(String[] args) throws ClassNotFoundException, SQLException{
 		// String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
 		String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
 		//if the database already exists we delete it

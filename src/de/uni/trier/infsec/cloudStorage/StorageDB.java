@@ -1,10 +1,7 @@
 package de.uni.trier.infsec.cloudStorage;
 
 import java.io.File;
-import java.io.Reader;
 import java.sql.*;
-
-import de.uni.trier.infsec.utils.Utilities;
 
 public class StorageDB {
 	
@@ -16,7 +13,7 @@ public class StorageDB {
 	private Connection db;
 	//private static final String DB_TABLE = ;
 	
-	public StorageDB(String file_database){
+	public StorageDB(String file_database) throws ClassNotFoundException, SQLException{
 		this.file_database=file_database;
 		boolean dbExist = (new File(file_database)).exists();
 		try {
@@ -31,33 +28,28 @@ public class StorageDB {
 				// Creates 'msg_storage' table 
 				String sql = "CREATE TABLE " + TABLE_STORAGE +
 					"(userID INTEGER NOT NULL, " +
-					"label TEXT NOT NULL, " +
+					"label BLOB NOT NULL, " +
 					"counter INTEGER NOT NULL, " +
-					"message TEXT, " +
-					"signature TEXT,  " +
+					"message BLOB, " +
+					"signature BLOB,  " +
 					"PRIMARY KEY (userID, label, counter));";
 				
 				// Creates a Statement object for sending SQL statements to the database
 				Statement stmt = db.createStatement();
-				//PreparedStatement pstmt = db.prepareStatement(sql);
-				
 				stmt.execute(sql);
 				stmt.close();
 			}
-		    db.close();
-	    } catch( Exception e ) {
-	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	      e.printStackTrace();
-	      System.exit(0);
+	    } finally{
+	    	db.close();
 	    }
-	    //System.out.println("Opened database successfully");
 	}
 	
 	/**
 	 * Store a message and its signature under the index (userID, label, counter)
 	 * If the (userID, label, counter) has already been used, throw an SQL exception
+	 * @throws SQLException 
 	 */
-	public void insert(int userID, byte[] label, int counter, byte[] msg, byte[] msgSign){
+	public void insert(int userID, byte[] label, int counter, byte[] msg, byte[] msgSign) throws SQLException{
 		try {
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			
@@ -66,26 +58,26 @@ public class StorageDB {
 			// Creates a Statement object for sending SQL statements to the database
 			PreparedStatement pstmt = db.prepareStatement(sql);
 			pstmt.setInt(1, userID);
-			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setBytes(2, label);
 			pstmt.setInt(3, counter);
-			pstmt.setString(4, Utilities.byteArrayToHexString(msg));
-			pstmt.setString(5, Utilities.byteArrayToHexString(msgSign));
+			pstmt.setBytes(4, msg);
+			pstmt.setBytes(5, msgSign);
+			
 			pstmt.executeUpdate();
 			pstmt.close();
-		    db.close();
-	    } catch ( Exception e ) {
-	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	      e.printStackTrace();
-	      System.exit(0);
-	    }
+		} finally {
+			db.close();
+		}
 	}
 		
 	
 	/**	
 	 * Retrieve the message associated to the index (userID, label, index) if it is in the DB,
 	 * null otherwise
+	 * @throws SQLException 
 	 */
-	public byte[] getMessage(int userID, byte[] label, int counter){
+	public byte[] getMessage(int userID, byte[] label, int counter) throws SQLException{
+		byte[] msg=null;
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			/*
@@ -96,28 +88,26 @@ public class StorageDB {
 			// Creates a Statement object for sending SQL statements to the database
 			PreparedStatement pstmt = db.prepareStatement(sql);
 			pstmt.setInt(1, userID);
-			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setBytes(2, label);
 			pstmt.setInt(3, counter);
 			
 			ResultSet rs = pstmt.executeQuery();
-			if(!rs.next()) // no rows
-				return null;
-			String msg = rs.getString("message");
+			if(rs.next()) // there is one row
+				msg = rs.getBytes("message");
 			pstmt.close();
-		    db.close();
-		    return Utilities.hexStringToByteArray(msg);
-			
-		} catch ( Exception e ) {
-		      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-		      System.exit(0);
+		} finally{
+			db.close();
 		}
-		return null;	
+		return msg;
 	}
+	
 	/**
 	 * Retrieve the signature associated to the index (userID, label, index) if if it's in the storage,
 	 * null otherwise
+	 * @throws SQLException 
 	 */
-	public byte[] getSignature(int userID, byte[] label, int counter){
+	public byte[] getSignature(int userID, byte[] label, int counter) throws SQLException{
+		byte[] sign = null;
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			/*
@@ -128,36 +118,33 @@ public class StorageDB {
 			// Creates a Statement object for sending SQL statements to the database
 			PreparedStatement pstmt = db.prepareStatement(sql);
 			pstmt.setInt(1, userID);
-			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setBytes(2, label);
 			pstmt.setInt(3, counter);
 			
 			ResultSet rs = pstmt.executeQuery();
-			if(!rs.next()) // no rows
-				return null;
-			String sign = rs.getString("signature");
+			if(rs.next()) // there is a rows
+				sign = rs.getBytes("signature");
 			pstmt.close();
-		    db.close();
-		    return Utilities.hexStringToByteArray(sign);
-			
-		} catch ( Exception e ) {
-		      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-		      System.exit(0);
+		} finally{
+			db.close();
 		}
-		return null;	
+	    return sign;
 	}
 	/**
 	 * Return the higher counter associated with a particular (userID, label), if exist
 	 * -1 otherwise
+	 * @throws SQLException 
 	 */
-	public int getLastCounter(int userID, byte[] label){
+	public int getLastCounter(int userID, byte[] label) throws SQLException{
+		int counter=-1;
 		try{
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
-/*			String sql = "SELECT * FROM " + TABLE_STORAGE + 
+			/*String sql = "SELECT * FROM " + TABLE_STORAGE + 
 					" WHERE userID=? AND label=?;";
 			// Creates a Statement object for sending SQL statements to the database
 			PreparedStatement pstmt = db.prepareStatement(sql);
 			pstmt.setInt(1,userID);
-			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setBytes(2, label);
 			ResultSet rs = pstmt.executeQuery();
 			if(!rs.next()) // no rows
 				return -1;*/
@@ -166,21 +153,20 @@ public class StorageDB {
 					" WHERE userID=? AND label=?;";
 			PreparedStatement pstmt = db.prepareStatement(sql);
 			pstmt.setInt(1,userID);
-			pstmt.setString(2, Utilities.byteArrayToHexString(label));
+			pstmt.setBytes(2, label);
 			ResultSet rs = pstmt.executeQuery();
-			Reader r = rs.getCharacterStream(1);
-			if(r!=null) // no counter under these (userID, label) pair
-				return -1;
-			int counter = rs.getInt(1);
+			if (rs.next()){
+				counter=rs.getInt(1); // if the first row is NULL it return 0;
+				if(rs.wasNull()){ // no counter under this (userID, label) pair
+					//System.out.println(counter);
+					counter = -1;
+				}
+			}
 			pstmt.close();
-		    db.close();
-		    return counter;
-			
-		} catch ( Exception e ) {
-		      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-		      System.exit(0);
+		} finally {
+			db.close();
 		}
-		return -1;	
+		return counter;
 	}		
 	
 }

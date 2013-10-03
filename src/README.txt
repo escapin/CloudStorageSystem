@@ -68,4 +68,7 @@ Run following commands from bin-folder of the compiled project:
 5b.2.  java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientRetrieveApp 101 pwd
 
 
-In order to delete the files created, delete the directories %TEMP%/CloudStorage and %TEMP%/PKIServer.db
+In order to delete the files created, delete the directories %TEMP%/CloudStorage and %TEMP%/PKIServer.db 
+or run (required Java 1.7):
+
+6. java de.uni.trier.infsec.cloudStorage.DeleteTmp

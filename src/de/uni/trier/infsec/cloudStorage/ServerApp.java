@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import de.uni.trier.infsec.functionalities.pki.PKI;
 import de.uni.trier.infsec.functionalities.pkienc.*;
@@ -24,7 +25,7 @@ public class ServerApp {
 		ServerApp.run();
 	}
 
-	private static void setupServer() {
+	private static void setupServer() throws ClassNotFoundException, SQLException {
 		byte[] serialized=null;
 		try {
 			serialized = readFromFile(Params.PATH_SERVER);

@@ -1,10 +1,13 @@
 package de.uni.trier.infsec.tests;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
+
 import org.junit.Test;
+
 import de.uni.trier.infsec.cloudStorage.*;
 import de.uni.trier.infsec.cloudStorage.Client.CounterOutOfDate;
 import de.uni.trier.infsec.cloudStorage.Server.MalformedMessage;
@@ -129,7 +132,7 @@ public class CloudStorageTest extends TestCase {
 		public byte[] sendRequest(byte[] msg) throws NetworkError{
 				try {
 					return Server.processRequest(msg);
-				} catch (MalformedMessage | RegisterEnc.PKIError | RegisterSig.PKIError e) {
+				} catch (MalformedMessage | RegisterEnc.PKIError | RegisterSig.PKIError | SQLException e) {
 					e.printStackTrace();
 				}
 				return null;

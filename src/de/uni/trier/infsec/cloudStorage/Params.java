@@ -2,6 +2,7 @@ package de.uni.trier.infsec.cloudStorage;
 
 import java.io.File;
 
+
 public class Params {
 
 	public static byte[] PKI_DSIG_DOMAIN = "PKI_DSIG".getBytes();
@@ -23,6 +24,8 @@ public class Params {
 	public static byte[] LAST_COUNTER="LAST_COUNTER".getBytes();
 
 	// Storage
+	public static final String PKI_DATABASE = System.getProperty("java.io.tmpdir") + File.separator + "PKI_server.db";
+	// = de.uni.trier.infsec.functionalities.pki.PKIServerCore.DEFAULT_DATABASE;
 	public static final String PATH_STORAGE = System.getProperty("java.io.tmpdir") + File.separator + "CloudStorage" + File.separator;
 	public static final String STORAGE_DB = PATH_STORAGE + File.separator + "cloud_storage.db";
 	public static final String PATH_SERVER = Params.PATH_STORAGE + File.separator + "server.info";
