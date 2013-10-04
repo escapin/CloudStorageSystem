@@ -9,12 +9,13 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class DeleteTmp {
+public class DeleteLocalFiles {
 	public static void main(String[] args) throws IOException{
 		
 		Path dir = FileSystems.getDefault().getPath(Params.PKI_DATABASE);
 		try{
 			Files.delete(dir);
+			System.out.println("Deleting file: " + dir);
 		}catch (NoSuchFileException e){
 			System.out.println(e.toString());
 		}
