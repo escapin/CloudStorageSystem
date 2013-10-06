@@ -22,7 +22,7 @@ public class StorageDB {
 			Class.forName("org.sqlite.JDBC");
 			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
 			
-			// only if the database didn't exist, create the table
+			// only if the database does not exist, create the table
 			if(!dbExist){
 				
 				// Creates 'msg_storage' table 
@@ -148,7 +148,6 @@ public class StorageDB {
 			ResultSet rs = pstmt.executeQuery();
 			if(!rs.next()) // no rows
 				return -1;*/
-			// there is at least a row with the (userID, label) pair
 			String sql = "SELECT MAX(counter) FROM " + TABLE_STORAGE + 
 					" WHERE userID=? AND label=?;";
 			PreparedStatement pstmt = db.prepareStatement(sql);
@@ -156,11 +155,9 @@ public class StorageDB {
 			pstmt.setBytes(2, label);
 			ResultSet rs = pstmt.executeQuery();
 			if (rs.next()){
-				counter=rs.getInt(1); // if the first row is NULL it return 0;
-				if(rs.wasNull()){ // no counter under this (userID, label) pair
-					//System.out.println(counter);
+				counter=rs.getInt(1); // if the first row is NULL, this method returns 0;
+				if(rs.wasNull()) // no counter under this (userID, label) pair
 					counter = -1;
-				}
 			}
 			pstmt.close();
 		} finally {
