@@ -104,7 +104,7 @@ public class UserGUI extends JFrame {
 	 * Create the frame.
 	 */
 	public UserGUI() {
-		setIconImage(Toolkit.getDefaultToolkit().getImage(UserGUI.class.getResource("/de/uni/trier/infsec/cloudStorage/cloud.png")));
+		setIconImage(Toolkit.getDefaultToolkit().getImage(UserGUI.class.getResource("/de/uni/trier/infsec/cloudStorage/icons/cloud_full.png")));
 		setTitle("User - Cloud Storage 2013");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 489, 334);
