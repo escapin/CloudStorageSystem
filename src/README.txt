@@ -1,10 +1,18 @@
 Prerequisites:
-	Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files
+
+-	To run this project within the Oracle (previously Sun) distribution of Java,
+	you need to download and install:
+		
+		Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files
 	
-	 To download and apply the JCE, see at the bottom of this page:
-	 	http://www.oracle.com/technetwork/java/javase/downloads/index.html
-
-
+	For instance, see at the bottom of this page: 
+	 		http://www.oracle.com/technetwork/java/javase/downloads/index.html
+	
+	
+-	On the other hand, OpenJDK does not require special handling of the JCE policy files 
+	since it is open source and therefore not export-restricted in the United States.
+	
+	
 
 How-To run the StorageSystem process:
 
@@ -68,7 +76,7 @@ Run following commands from bin-folder of the compiled project:
 5b.2.  java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientRetrieveApp 101 pwd
 
 
-In order to delete local files created (e.g. database), delete %TEMP%/CloudStorage and %TEMP%/PKIServer.db 
+In order to delete local files created (e.g. the databases), delete %TEMP%/CloudStorage and %TEMP%/PKIServer.db 
 or run (required Java 1.7):
 
 6. java de.uni.trier.infsec.cloudStorage.DeleteLocalFiles
