@@ -8,19 +8,24 @@ public class StorageDB {
 	
 	//public static final String FILE_DATABASE = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
 	// private String file_database = "storageDB" + File.separator + "cloud_storage.db";
-	private String file_database;
+	private String db_file;
 	private String TABLE_STORAGE = "msg_storage";
 	private Connection db;
 	//private static final String DB_TABLE = ;
 	
-	public StorageDB(String file_database) throws ClassNotFoundException, SQLException{
-		this.file_database=file_database;
-		boolean dbExist = (new File(file_database)).exists();
+	public StorageDB(String db_file) throws ClassNotFoundException, SQLException{
+		this.db_file=db_file;
+		boolean dbExist = (new File(db_file)).exists();
 		try {
+			// checks whether the path where we want to store the db file
+			// exists. 
+			File fdir = new File(db_file.substring(0, db_file.lastIndexOf(File.separator)));
+			// If not, we create it!
+			fdir.mkdirs();
 			// connect to a database. If database does not exist, 
 			// then it will be created and finally a database object will be returned
 			Class.forName("org.sqlite.JDBC");
-			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
+			db = DriverManager.getConnection("jdbc:sqlite:" + db_file);
 			
 			// only if the database does not exist, create the table
 			if(!dbExist){
@@ -40,7 +45,8 @@ public class StorageDB {
 				stmt.close();
 			}
 	    } finally{
-	    	db.close();
+	    	if(db!=null) // if an exception is thrown, it could be that the db has not been initialized
+	    		db.close();
 	    }
 	}
 	
@@ -51,7 +57,7 @@ public class StorageDB {
 	 */
 	public void insert(int userID, byte[] label, int counter, byte[] msg, byte[] msgSign) throws SQLException{
 		try {
-			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
+			db = DriverManager.getConnection("jdbc:sqlite:" + db_file);
 			
 			String sql = "INSERT INTO " + TABLE_STORAGE + " (userID, label, counter, message, signature) " +
 	                   " VALUES (?,?,?,?,?);";
@@ -66,7 +72,7 @@ public class StorageDB {
 			pstmt.executeUpdate();
 			pstmt.close();
 		} finally {
-			db.close();
+			db.close(); // unless an external problem occurs (e.g., the sqlite library is missing), db is never null at this point
 		}
 	}
 		
@@ -79,7 +85,7 @@ public class StorageDB {
 	public byte[] getMessage(int userID, byte[] label, int counter) throws SQLException{
 		byte[] msg=null;
 		try{
-			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
+			db = DriverManager.getConnection("jdbc:sqlite:" + db_file);
 			/*
 			 * SELECT signature FROM msg_storage WHERE userID='userID', label='label' AND counter='counter'	
 			 */
@@ -96,7 +102,7 @@ public class StorageDB {
 				msg = rs.getBytes("message");
 			pstmt.close();
 		} finally{
-			db.close();
+			db.close(); // unless an external problem occurs (e.g., the sqlite library is missing), db is never null at this point
 		}
 		return msg;
 	}
@@ -109,7 +115,7 @@ public class StorageDB {
 	public byte[] getSignature(int userID, byte[] label, int counter) throws SQLException{
 		byte[] sign = null;
 		try{
-			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
+			db = DriverManager.getConnection("jdbc:sqlite:" + db_file);
 			/*
 			 * SELECT signature FROM msg_storage WHERE userID='userID', label='label' AND counter='counter'	
 			 */
@@ -126,7 +132,7 @@ public class StorageDB {
 				sign = rs.getBytes("signature");
 			pstmt.close();
 		} finally{
-			db.close();
+			db.close(); // unless an external problem occurs (e.g., the sqlite library is missing), db is never null at this point
 		}
 	    return sign;
 	}
@@ -138,7 +144,7 @@ public class StorageDB {
 	public int getLastCounter(int userID, byte[] label) throws SQLException{
 		int counter=-1;
 		try{
-			db = DriverManager.getConnection("jdbc:sqlite:" + file_database);
+			db = DriverManager.getConnection("jdbc:sqlite:" + db_file);
 			/*String sql = "SELECT * FROM " + TABLE_STORAGE + 
 					" WHERE userID=? AND label=?;";
 			// Creates a Statement object for sending SQL statements to the database
@@ -161,7 +167,7 @@ public class StorageDB {
 			}
 			pstmt.close();
 		} finally {
-			db.close();
+			db.close(); // unless an external problem occurs (e.g., the sqlite library is missing), db is never null at this point
 		}
 		return counter;
 	}		

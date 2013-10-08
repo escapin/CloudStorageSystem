@@ -50,7 +50,8 @@ public class ServerRegisterApp {
 	public static void storeAsFile(byte[] data, String sFile) throws IOException {
 		File f = new File(sFile);
 		File fdir = new File(sFile.substring(0, sFile.lastIndexOf(File.separator)));
-		if (f.exists()) f.delete();
+		if (f.exists()) 
+			f.delete();
 		fdir.mkdirs();
 		f.createNewFile();
 

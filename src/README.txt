@@ -5,7 +5,7 @@ Prerequisites:
 		
 		Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files
 	
-	For instance, see at the bottom of this page: 
+	For instance, see at the bottom of this page:
 	 		http://www.oracle.com/technetwork/java/javase/downloads/index.html
 	
 	
@@ -77,6 +77,6 @@ Run following commands from bin-folder of the compiled project:
 
 
 In order to delete local files created (e.g. the databases), delete %TEMP%/CloudStorage and %TEMP%/PKIServer.db 
-or run (required Java 1.7):
+or run (Java 1.7 required):
 
 6. java de.uni.trier.infsec.cloudStorage.DeleteLocalFiles

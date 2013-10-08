@@ -23,15 +23,7 @@ public class CloudStorageTest extends TestCase {
 	@Test
 	public void test() throws Exception {
 		
-		// delete the database where the message are stored
-		File f = new File(Params.STORAGE_DB);
-		if(f.exists())
-			f.delete();
 		
-		PKI.useLocalMode();
-		// Register the server:
-		Server.init();
-
 		NetworkInterface network = new NetworkTest();
 		
 		// CLIENT 01
@@ -139,10 +131,22 @@ public class CloudStorageTest extends TestCase {
 		}
 	}
 	
+	
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
-		File f = new File(PKIServerCore.DEFAULT_DATABASE);
-		f.delete();
+		File dbFile = new File(PKIServerCore.DEFAULT_DATABASE);
+		if (dbFile.exists()){
+			dbFile.delete();
+			PKIServerCore.initDB();
+		}
+		PKI.useLocalMode();
+		// delete the database where the message are stored
+//		File f = new File(Params.STORAGE_DB);
+//		if(f.exists())
+//			f.delete();
+				
+		// Register the server:
+		Server.init();
 	}
 }

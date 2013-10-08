@@ -13,21 +13,24 @@ import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
+
 import java.awt.BorderLayout;
+
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.AWTEvent;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 
 import javax.swing.SwingConstants;
-import java.awt.Font;
 
+import java.awt.Font;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,8 +44,9 @@ import de.uni.trier.infsec.functionalities.pkisig.*;
 import de.uni.trier.infsec.functionalities.symenc.SymEnc;
 import de.uni.trier.infsec.utils.MessageTools;
 import de.uni.trier.infsec.lib.network.NetworkError;
+
 import javax.swing.JTextArea;
-import java.awt.Component;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Toolkit;
@@ -105,7 +109,7 @@ public class UserGUI extends JFrame {
 	 */
 	public UserGUI() {
 		setIconImage(Toolkit.getDefaultToolkit().getImage(UserGUI.class.getResource("/de/uni/trier/infsec/cloudStorage/icons/cloud_full.png")));
-		setTitle("User - Cloud Storage 2013");
+		setTitle("User - Cloud Storage");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 489, 334);
 		
@@ -117,8 +121,8 @@ public class UserGUI extends JFrame {
 		// login Panel
 		JPanel login = new JPanel();
 		JButton btnLogIn = new JButton("Log In");
-		
 		JLabel lblUserId = new JLabel("User ID:");
+		
 		textField = new JTextField();
 		textField.setColumns(10);
 		lblUserNotRegister = new JLabel("");
@@ -164,59 +168,14 @@ public class UserGUI extends JFrame {
 		);
 		login.setLayout(gl_login);
 		
-		btnLogIn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ev) {
-				if(textField.getText().length()==0){
-					lblUserNotRegister.setText("<html>User ID field empty!<br>Please insert a valid ID number of a previously registered user.</html>");
-					return;
-				}
-				
-				try{
-					userID = Integer.parseInt(textField.getText());
-					if(userID<0)
-						throw new NumberFormatException();
-				} catch (NumberFormatException e){
-					System.out.println("'" + textField.getText() + "' is not a proper userID!\nPlease insert the ID number of a previously registered user.");
-					lblUserNotRegister.setText("<html>'" + textField.getText() + "' is not a proper userID!<br>Please insert the ID number of a registered user.</html>");
-					return;
-				}
-				
-				
-				lblUserNotRegister.setText("");
-				lblWait.setText("Wait..."); // FIXME: it doesn't work!
-				
-				JPanel loginPanel = (JPanel) ((JButton)ev.getSource()).getParent();
-				//lblWait.paintImmediately(loginPanel.getVisibleRect());
-				loginPanel.paintImmediately(loginPanel.getVisibleRect());
-				
-				boolean userRegistered=false;
-				try {
-					setupClient(userID);
-					userRegistered=true;
-				} catch (FileNotFoundException e){
-					System.out.println("User " + userID + " not registered!\nType \'UserRegisterApp <user_id [int]>\' in a terminal to register him/her.");
-					lblUserNotRegister.setText("<html>User " + userID + " not registered!<br>Please register yourself before log in.</html>");
-				} catch (IOException e){
-					System.out.println("IOException occurred while reading the credentials of the user!");
-					lblUserNotRegister.setText("IOException occurred while reading the credentials of the user!");
-				} catch (RegisterSig.PKIError | RegisterEnc.PKIError e){
-					System.out.println("PKI Error occurred: perhaps the PKI server is not running!");
-					lblUserNotRegister.setText("<html>PKI Error:<br> perhaps the PKI server is not running!</html>");
-				} catch (NetworkError e){
-					//FIXME: java.net.ConnectException when the PKIServer is not running!
-					System.out.println("Network Error occurred while connecting with the PKI server: perhaps the PKI server is not running!");
-					lblUserNotRegister.setText("<html>Network Error occurred:<br> perhaps the PKI server is not running!</html>");
-				} finally{
-					lblWait.setText("");
-				}
-				if(userRegistered){
-					textField.setText("");
-					setTitle("User " + userID + " - Cloud Storage 2013");
-					CardLayout cl = (CardLayout) getContentPane().getLayout();
-					cl.show(getContentPane(), "2");
-				}
-			}
-		});
+		btnLogIn.addActionListener(new Login());
+		btnLogIn.addKeyListener(new KeyAdapter() {
+		    public void keyPressed(KeyEvent e) {
+		         if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+		              onLoginPress(e);
+		         }
+		    } 
+		 });
 		
 		
 		// main windows panel
@@ -497,7 +456,7 @@ public class UserGUI extends JFrame {
 				CardLayout cl = (CardLayout) getContentPane().getLayout();
 				cl.show(getContentPane(), "1");
 				
-				setTitle("User - Cloud Storage 2013");
+				setTitle("User - Cloud Storage");
 			}
 		});
 		GroupLayout gl_south = new GroupLayout(south);
@@ -518,6 +477,69 @@ public class UserGUI extends JFrame {
 	}
 	
 	
+	
+	
+	/*
+	 * LISTENERS
+	 */
+	public class Login implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			onLoginPress(ev);
+		}
+	}
+	private void onLoginPress(AWTEvent ev){
+		if(textField.getText().length()==0){
+			lblUserNotRegister.setText("<html>User ID field empty!<br>Please insert a valid ID number of a previously registered user.</html>");
+			return;
+		}
+		
+		try{
+			userID = Integer.parseInt(textField.getText());
+			if(userID<0)
+				throw new NumberFormatException();
+		} catch (NumberFormatException e){
+			System.out.println("'" + textField.getText() + "' is not a proper userID!\nPlease insert the ID number of a previously registered user.");
+			lblUserNotRegister.setText("<html>'" + textField.getText() + "' is not a proper userID!<br>Please insert the ID number of a registered user.</html>");
+			return;
+		}
+		
+		
+		lblUserNotRegister.setText("");
+		lblWait.setText("Wait..."); // FIXME: it doesn't work!
+		
+		JPanel loginPanel = (JPanel) ((JButton) ev.getSource()).getParent();
+		//lblWait.paintImmediately(loginPanel.getVisibleRect());
+		loginPanel.paintImmediately(loginPanel.getVisibleRect());
+		
+		boolean userRegistered=false;
+		try {
+			setupClient(userID);
+			userRegistered=true;
+		} catch (FileNotFoundException e){
+			System.out.println("User " + userID + " not registered!\nType \'UserRegisterApp <user_id [int]>\' in a terminal to register him/her.");
+			lblUserNotRegister.setText("<html>User " + userID + " not registered!<br>Please register yourself before log in.</html>");
+		} catch (IOException e){
+			System.out.println("IOException occurred while reading the credentials of the user!");
+			lblUserNotRegister.setText("IOException occurred while reading the credentials of the user!");
+		} catch (RegisterSig.PKIError | RegisterEnc.PKIError e){
+			System.out.println("PKI Error occurred: perhaps the PKI server is not running!");
+			lblUserNotRegister.setText("<html>PKI Error:<br> perhaps the PKI server is not running!</html>");
+		} catch (NetworkError e){
+			//FIXME: java.net.ConnectException when the PKIServer is not running!
+			System.out.println("Network Error occurred while connecting with the PKI server: perhaps the PKI server is not running!");
+			lblUserNotRegister.setText("<html>Network Error occurred:<br> perhaps the PKI server is not running!</html>");
+		} finally{
+			lblWait.setText("");
+		}
+		if(userRegistered){
+			textField.setText("");
+			setTitle("User " + userID + " - Cloud Storage");
+			CardLayout cl = (CardLayout) getContentPane().getLayout();
+			cl.show(getContentPane(), "2");
+		}
+	}
 	
 	/*
 	 * CORE CODE

@@ -1,5 +1,9 @@
 package de.uni.trier.infsec.tests;
 
+import junit.framework.TestCase;
+
+import org.junit.Test;
+
 import java.io.File;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -8,8 +12,9 @@ import de.uni.trier.infsec.cloudStorage.StorageDB;
 
 // TODO: convert it into a test case
 
-public class TestStorage {
-	public static void main(String[] args) throws ClassNotFoundException, SQLException{
+public class TestStorage extends TestCase{
+	@Test
+	public void test() throws Exception {
 		// String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
 		String fileDB = System.getProperty("java.io.tmpdir") + File.separator + "cloud_storage.db";
 		//if the database already exists we delete it
@@ -25,18 +30,20 @@ public class TestStorage {
 		
 		byte[] msg=storage.getMessage(100, "label01".getBytes(), 1);
  		byte[] sign=storage.getSignature(100, "label01".getBytes(), 1);
-		if(Arrays.equals(msg, "msgLabel01".getBytes()) && Arrays.equals(sign, "signLabel01".getBytes()))
-			System.out.println("OK");
-		System.out.println(storage.getLastCounter(100, "label01".getBytes()));
+ 		// the message and the signature retrieved must be equals to those ones stored with the first counter (i.e., 1)
+ 		assertTrue(Arrays.equals(msg, "msgLabel01".getBytes()) && Arrays.equals(sign, "signLabel01".getBytes()));
+		// the last label has to be 3
+ 		assertTrue(storage.getLastCounter(100, "label01".getBytes())==3);
 		
 		
 		storage.insert(100, "label01".getBytes(), 6, "msgLabel05".getBytes(), "signLabel05".getBytes());
-		msg=storage.getMessage(100, "label01".getBytes(), 6);
+		// updated the entry with new msg/sign, so get methods have to return the last insertion 
+ 		msg=storage.getMessage(100, "label01".getBytes(), 6);
  		sign=storage.getSignature(100, "label01".getBytes(), 6);
-		if(Arrays.equals(msg, "msgLabel05".getBytes()) && Arrays.equals(sign, "signLabel05".getBytes()))
-			System.out.println("OK");
-		System.out.println(storage.getLastCounter(10, "label01".getBytes()));
-		
-		System.out.println(storage.getLastCounter(100, "label02".getBytes()));
+		assertTrue(Arrays.equals(msg, "msgLabel05".getBytes()) && Arrays.equals(sign, "signLabel05".getBytes()));
+		// getLastCounter for an user not in the db has to return -1
+ 		assertTrue(storage.getLastCounter(10, "label01".getBytes())==-1);
+		// getLastCounter for a label used only once hat to return 2
+		assertTrue(storage.getLastCounter(100, "label02".getBytes())==1);
 	}
 }
