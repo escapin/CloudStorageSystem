@@ -1,5 +1,7 @@
 Prerequisites:
 
+-	Java 1.7 SDK
+
 -	To run this project within the Oracle (previously Sun) distribution of Java,
 	you need to download and install:
 		
@@ -56,6 +58,9 @@ How-To run the StorageSystem process:
      This class allows an user to retrieve the message stored on the server under the specific label,
      by command line interface.
 
+6.  Run class de.uni.trier.infsec.cloudStorage.DeleteLocalFiles
+    In order to delete local files created (e.g. the databases) which are stored
+    in your %TEMP%/CloudStorage and %TEMP%/PKIServer.db
 
 
 EXAMPLE:
@@ -74,9 +79,5 @@ Run following commands from bin-folder of the compiled project:
 
 5b.1. java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientStoreApp 101 pwd PasswordIwantToStore
 5b.2.  java -cp ".:../lib/*" de.uni.trier.infsec.cloudStorage.ClientRetrieveApp 101 pwd
-
-
-In order to delete local files created (e.g. the databases), delete %TEMP%/CloudStorage and %TEMP%/PKIServer.db 
-or run (Java 1.7 required):
 
 6. java de.uni.trier.infsec.cloudStorage.DeleteLocalFiles
