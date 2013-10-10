@@ -68,7 +68,7 @@ public class UserGUI extends JFrame {
 	private JTextArea textMsgRetrieved;
 	private JLabel lblStoreStatus;
 	private JLabel lblRetrieveStatus;
-	private JComboBox comboBox;
+	private JComboBox<String> comboBox;
 	private JLabel lblWait;
 	/*
 	 * CORE FIELD
@@ -108,7 +108,7 @@ public class UserGUI extends JFrame {
 	 * Create the frame.
 	 */
 	public UserGUI() {
-		setIconImage(Toolkit.getDefaultToolkit().getImage(UserGUI.class.getResource("/de/uni/trier/infsec/cloudStorage/icons/cloud_full.png")));
+		setIconImage(Toolkit.getDefaultToolkit().getImage("./cloud_full.png"));
 		setTitle("User - Cloud Storage");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 489, 334);
@@ -192,8 +192,8 @@ public class UserGUI extends JFrame {
 		JPanel north = new JPanel();
 		main.add(north, BorderLayout.NORTH);
 		
-		comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {STORE, RETRIEVE}));
+		comboBox = new JComboBox<String>();
+		comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {STORE, RETRIEVE}));
 		JLabel lblLabel = new JLabel("Label:");
 		
 		labelField = new JTextField();
@@ -422,14 +422,15 @@ public class UserGUI extends JFrame {
 		center.add(retrievePanel, RETRIEVE);
 		comboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				 JComboBox jcb = (JComboBox) e.getSource();
-				 CardLayout cl = (CardLayout)(center.getLayout());
+				@SuppressWarnings("rawtypes")
+				JComboBox jcb = (JComboBox) e.getSource();;
+				CardLayout cl = (CardLayout)(center.getLayout());
 				 
-				 lblWait.setText("");
-				 lblStoreStatus.setText("");
-				 lblRetrieveStatus.setText("");
+				lblWait.setText("");
+				lblStoreStatus.setText("");
+				lblRetrieveStatus.setText("");
 				 
-				 cl.show(center, jcb.getSelectedItem().toString());
+				cl.show(center, jcb.getSelectedItem().toString());
 			}
 		});
 		
