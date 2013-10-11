@@ -29,10 +29,10 @@ public class ServerRegisterApp {
 			RegisterEnc.registerEncryptor(server_decr.getEncryptor(), Params.SERVER_ID, Params.PKI_ENC_DOMAIN);
 			RegisterSig.registerVerifier(server_signer.getVerifier(), Params.SERVER_ID, Params.PKI_DSIG_DOMAIN);
 		} catch (RegisterEnc.PKIError | RegisterSig.PKIError e) {
-			e.printStackTrace();
+			outl("\tCloud Server already registered!\n\tYou can directly execute it.");
 			System.exit(0);
 		} catch (NetworkError e) {
-			e.printStackTrace();
+			outl("Error while trying to register the encryption/verification keys!");
 			System.exit(0);
 		}
 		byte[] id = MessageTools.intToByteArray(Params.SERVER_ID);
@@ -42,7 +42,7 @@ public class ServerRegisterApp {
 		try {
 			storeAsFile(serialized, Params.PATH_SERVER);
 		} catch (IOException e) {
-			e.printStackTrace();
+			outl("Error while trying to store the encryption/verification keys!");
 			System.exit(0);
 		}
 	}
@@ -59,5 +59,12 @@ public class ServerRegisterApp {
 		file.write(data);
 		file.flush();
 		file.close();
+	}
+	
+	private static void out(String s){
+		System.out.print(s);
+	}
+	private static void outl(String s){
+		System.out.println(s);
 	}
 }

@@ -32,7 +32,6 @@ public class ClientRetrieveApp {
 				label = args[1].getBytes();
 			} catch (Exception e) {
 				System.out.println("Something is wrong with arguments!\nClientRetrieveApp <user_id [int]> <label [String]> \nExample: ClientRetrieveApp 101 pwd");
-				e.printStackTrace();
 				System.exit(0);
 			}
 		}
@@ -56,7 +55,7 @@ public class ClientRetrieveApp {
 			System.out.println("User " + userID + " not registered!\nType \'UserRegisterApp <user_id [int]>\' to register him/her.");
 			System.exit(0);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Error while trying to retreive from the memory the client's keys: the file is damaged!");
 			System.exit(0);
 		}
 		byte[] sym_decr_sig = MessageTools.second(serialized);

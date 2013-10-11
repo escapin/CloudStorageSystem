@@ -24,7 +24,6 @@ public class UserRegisterApp {
 				userID = Integer.parseInt(args[0]);
 			} catch (Exception e) {
 				System.out.println("Something is wrong with arguments!\nExpected: UserRegisterApp <user_id [int]>\nExample: UserRegisterApp 101");
-				e.printStackTrace();
 				System.exit(0);
 			}
 			UserRegisterApp.register(userID);
@@ -40,10 +39,10 @@ public class UserRegisterApp {
 			RegisterEnc.registerEncryptor(user_decryptor.getEncryptor(), userID, Params.PKI_ENC_DOMAIN);
 			RegisterSig.registerVerifier(user_signer.getVerifier(), userID, Params.PKI_DSIG_DOMAIN);
 		} catch (RegisterEnc.PKIError | RegisterSig.PKIError e) {
-			e.printStackTrace();
+			outl("\tUser " + userID + " already registered!\n\tYou can directly execute the client.");
 			System.exit(0);
 		} catch (NetworkError e) {
-			e.printStackTrace();
+			outl("Error while trying to register the encryption/verification keys!");
 			System.exit(0);
 		}
 		byte[] id = MessageTools.intToByteArray(userID);
@@ -57,7 +56,7 @@ public class UserRegisterApp {
 		try {
 			storeAsFile(serialized, Params.PATH_USER + "user" + userID + ".info");
 		} catch (IOException e) {
-			e.printStackTrace();
+			outl("Error while trying to store the encryption/verification keys!");
 			System.exit(0);
 		}
 	}
@@ -74,5 +73,10 @@ public class UserRegisterApp {
 		file.flush();
 		file.close();
 	}
-
+	private static void out(String s){
+		System.out.print(s);
+	}
+	private static void outl(String s){
+		System.out.println(s);
+	}
 }

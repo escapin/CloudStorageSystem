@@ -38,7 +38,6 @@ public class ClientStoreApp {
 				msg = args[2].getBytes();
 			} catch (Exception e) {
 				System.out.println("Something is wrong with arguments!\nClientStoreApp <user_id [int]> <label [String]> <msg [String]>\nExample: ClientRegisterApp 101 pwd blank");
-				e.printStackTrace();
 				System.exit(0);
 			}
 		}
@@ -69,7 +68,7 @@ public class ClientStoreApp {
 			System.out.println("User " + userID + " not registered!\nType \'UserRegisterApp <user_id [int]>\' to register him/her.");
 			System.exit(0);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Error while trying to retreive from the memory the client's keys: the file is damaged!");
 			System.exit(0);
 		}
 		byte[] sym_decr_sig = MessageTools.second(serialized);
