@@ -2,7 +2,6 @@
 default: javabuild
 
 
-
 javabuild: 
 	-mkdir -p bin
 	javac -sourcepath src \
