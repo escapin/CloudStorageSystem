@@ -66,18 +66,18 @@ a sub-protocol to synchronize counter values for labels).
     
 
 5a. Run class `cloudStorage.app.ClientStoreApp <user_id [int]> <label [String]> <msg [String]>`
-    	
+
     To allow a user to store a message on the server under a specific
     label.
 
 5b. Run class `cloudStorage.app.ClientRetrieveApp <user_id [int]> <label [String]>`
-    
-     To allow an user to retrieve the message stored on the server under
-     the specific label, by command line interface.
+
+    To allow an user to retrieve the message stored on the server under
+    the specific label, by command line interface.
 
 6. Run class `cloudStorage.app.UserGUI`
 
-    The client user interface which allows an user to store and retrieve
+   The client user interface which allows an user to store and retrieve
     message from the server.
 
 7.  Run class `cloudStorage.app.DeleteLocalFiles`
