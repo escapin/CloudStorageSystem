@@ -7,7 +7,7 @@ javabuild:
 	javac -sourcepath src \
           -classpath "lib/*" \
           -d bin \
-          src/cloudStorage/*.java    
+          src/cloudStorage/core/*.java    
 
 clean:
 	-rm -r bin

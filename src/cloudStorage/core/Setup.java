@@ -1,4 +1,4 @@
-package cloudStorage;
+package cloudStorage.core;
 
 import environment.Environment;
 import funct.pkienc.*;

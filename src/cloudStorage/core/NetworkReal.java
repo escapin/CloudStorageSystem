@@ -1,4 +1,4 @@
-package cloudStorage;
+package cloudStorage.core;
 
 import lib.network.*;
 
