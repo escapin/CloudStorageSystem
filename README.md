@@ -65,22 +65,22 @@ a sub-protocol to synchronize counter values for labels).
     `%TEMP%/CloudStorage/user$(user_id).info`
     
 
-5a.1 Run class `cloudStorage.app.ClientStoreApp <user_id [int]> <label [String]> <msg [String]>`
-    
+5a. Run class `cloudStorage.app.ClientStoreApp <user_id [int]> <label [String]> <msg [String]>`
+    	
     To allow a user to store a message on the server under a specific
     label.
 
-5a.2 Run class `cloudStorage.app.ClientRetrieveApp <user_id [int]> <label [String]>`
+5b. Run class `cloudStorage.app.ClientRetrieveApp <user_id [int]> <label [String]>`
     
      To allow an user to retrieve the message stored on the server under
      the specific label, by command line interface.
 
-5b. Run class `cloudStorage.app.UserGUI`
+6. Run class `cloudStorage.app.UserGUI`
 
     The client user interface which allows an user to store and retrieve
     message from the server.
 
-6.  Run class `cloudStorage.app.DeleteLocalFiles`
+7.  Run class `cloudStorage.app.DeleteLocalFiles`
 
     To delete the local files created which are stored in the folder
     `%TEMP%/CloudStorage and %TEMP%/PKIServer.db`
