@@ -1,5 +1,5 @@
 bin
+lib
 storageDB
-lib/*
 .classpath
 .project
