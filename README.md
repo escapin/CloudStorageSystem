@@ -38,7 +38,45 @@ a sub-protocol to synchronize counter values for labels).
 * Miglayout Swing (tested with `miglayout-swing-5.0.jar`)
 	
 
-## Runnable classes
+## Usage
+
+From a Linux + GNOME environment,
+
+```
+./run
+```
+
+downloads the libraries, compiles the classes, and run all the apps
+(including the GUI).  The user ID of the only registered user is `101`.
+
+```
+make clean
+```
+to delete the local files in the temp directory and the binary files.
+
+
+
+## Example
+
+Run the following commands from the bin-folder of the compiled project:
+
+```
+java -cp ".:../lib/*" funct.pki.PKIServerApp
+
+java -cp ".:../lib/*" cloudStorage.app.ServerRegisterApp
+java -cp ".:../lib/*" cloudStorage.app.ServerApp
+
+java -cp ".:../lib/*" cloudStorage.app.UserRegisterApp 101
+
+java -cp ".:../lib/*" cloudStorage.app.ClientStoreApp 101 pwd PasswordIwantToStore
+java -cp ".:../lib/*" cloudStorage.app.ClientRetrieveApp 101 pwd
+
+java -cp ".:../lib/*" cloudStorage.app.UserGUI
+
+java -cp ".:../lib/*" cloudStorage.app.DeleteLocalFiles
+```
+
+### Runnable classes
 
 1. Run class `funct.pki.PKIServerApp`
 
@@ -85,42 +123,3 @@ a sub-protocol to synchronize counter values for labels).
 
     To delete the local files created which are stored in the folder
     `%TEMP%/CloudStorage and %TEMP%/PKIServer.db`
-
-
-## Usage
-
-From a Linux + GNOME environment,
-
-```
-./run
-```
-
-downloads the libraries, compiles the classes, and run all the apps
-(including the GUI).  The user ID of the only registered user is `101`.
-
-```
-make clean
-```
-to delete the local files in the temp directory and the binary files.
-
-
-
-## Example
-
-Run the following commands from the bin-folder of the compiled project:
-
-```
-java -cp ".:../lib/*" funct.pki.PKIServerApp
-
-java -cp ".:../lib/*" cloudStorage.app.ServerRegisterApp
-java -cp ".:../lib/*" cloudStorage.app.ServerApp
-
-java -cp ".:../lib/*" cloudStorage.app.UserRegisterApp 101
-
-java -cp ".:../lib/*" cloudStorage.app.ClientStoreApp 101 pwd PasswordIwantToStore
-java -cp ".:../lib/*" cloudStorage.app.ClientRetrieveApp 101 pwd
-
-java -cp ".:../lib/*" cloudStorage.app.UserGUI
-
-java -cp ".:../lib/*" cloudStorage.app.DeleteLocalFiles
-```
