@@ -3,7 +3,7 @@ package de.uni.trier.infsec.tests;
 import java.io.File;
 import java.util.Arrays;
 
-import de.uni.trier.infsec.cloudStorage.StorageDB;
+import cloudStorage.StorageDB;
 
 // TODO: convert it into a test case
 

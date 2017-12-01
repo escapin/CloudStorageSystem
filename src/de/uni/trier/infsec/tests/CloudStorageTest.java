@@ -5,9 +5,10 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 import org.junit.Test;
-import de.uni.trier.infsec.cloudStorage.*;
-import de.uni.trier.infsec.cloudStorage.Client.CounterOutOfDate;
-import de.uni.trier.infsec.cloudStorage.Server.MalformedMessage;
+
+import cloudStorage.*;
+import cloudStorage.Client.CounterOutOfDate;
+import cloudStorage.Server.MalformedMessage;
 import de.uni.trier.infsec.functionalities.pki.real.PKI;
 import de.uni.trier.infsec.functionalities.pki.real.PKIEnc;
 import de.uni.trier.infsec.functionalities.pki.real.PKIServerCore;

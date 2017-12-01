@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.cloudStorage;
+package cloudStorage;
 
 import java.util.*;
 import java.io.File;

@@ -1,4 +1,4 @@
-package de.uni.trier.infsec.cloudStorage;
+package cloudStorage;
 
 import de.uni.trier.infsec.lib.network.NetworkError;
 
