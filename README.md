@@ -30,14 +30,15 @@ a sub-protocol to synchronize counter values for labels).
 * Java Cryptography Extension (only needed for `oraclejdk`)
 * Bouncy Castle Cryptographic API (tested with `bcprov-jdk15on-147.jar`)
 * JavaParser (tested with `javaparser-1.0.8.jar`)
-* SQLJet (tested with `sqljet-1.1.6.jar`)
+* SQLJet (tested with `sqljet-1.1.10.jar`)
+* SQLilte (tested with `sqlite-jdbc-3.21.0.jar`)
 * JUnit (tested with `junit-4.8.2.jar`)
 * Apache Ant (tested with `ant-1.8.4.jar`)
 * Beans Binding (tested with `beansbinding-1.2.1.jar`)
 * Miglayout Swing (tested with `miglayout-swing-5.0.jar`)
 	
 
-## Usage
+## Runnable classes
 
 1. Run class `funct.pki.PKIServerApp`
 
@@ -84,6 +85,24 @@ a sub-protocol to synchronize counter values for labels).
 
     To delete the local files created which are stored in the folder
     `%TEMP%/CloudStorage and %TEMP%/PKIServer.db`
+
+
+## Usage
+
+From a Linux + GNOME environment,
+
+```
+./run
+```
+
+downloads the libraries, compiles the classes, and run the app.
+The <user_id> of the only user registered is `101`.
+
+```
+make clean
+```
+to delete the local files in the temp directory and the binary files.
+
 
 
 ## Example
