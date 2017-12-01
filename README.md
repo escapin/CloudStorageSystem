@@ -95,8 +95,8 @@ From a Linux + GNOME environment,
 ./run
 ```
 
-downloads the libraries, compiles the classes, and run the app.
-The <user_id> of the only user registered is `101`.
+downloads the libraries, compiles the classes, and run all the apps
+(including the GUI).  The user ID of the only registered user is `101`.
 
 ```
 make clean
